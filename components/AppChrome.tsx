@@ -3,22 +3,32 @@
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { BottomNav } from "./BottomNav";
-import { PageTransition } from "./PageTransition";
 
 /**
- * Shows the bottom nav on every authenticated route; hides it on /auth
- * (and any nested chat/detail pages that want a full-bleed view can still
- * render inside the shell, the nav simply persists like the prototype's
- * bottom bar).
+ * Faithful port of the prototype frame: #koraa-root (full-bleed gradient
+ * backdrop, centers the device) > #phone-frame (the app surface). Each
+ * Next.js route renders as a ".view" inside the frame, and #bottom-nav
+ * persists like the prototype bottom bar. The nav is hidden on /auth,
+ * and on full-bleed sub-views that own their bottom edge (chat).
  */
 export function AppChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const isAuth = pathname.startsWith("/auth");
+  const isChat = /^\/messages\/[^/]+$/.test(pathname);
+  const showNav = !isAuth && !isChat;
 
   return (
-    <div className="app-shell">
-      <PageTransition>{children}</PageTransition>
-      {!isAuth && <BottomNav />}
+    <div id="koraa-root">
+      <div id="phone-frame">
+        {isAuth ? (
+          children
+        ) : (
+          <div id="app-shell" style={{ position: "absolute", inset: 0 }}>
+            {children}
+            {showNav && <BottomNav />}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

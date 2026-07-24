@@ -1,117 +1,182 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { Icon } from "@/components/Icon";
+import { useRouter } from "next/navigation";
 
-export default function AuthPage() {
-  const [tab, setTab] = useState<"login" | "signup" | "forgot">("login");
-  const [loading, setLoading] = useState(false);
+/** Faithful port of the prototype AUTH view (renderAuth / renderSignupStep).
+ *  Backend calls are stubbed for now — wired to Supabase auth later. */
+const LANG_OPTIONS = ["Français", "Anglais", "Espagnol", "Dioula", "Baoulé"];
+const INTEREST_OPTIONS = [
+  "Mode",
+  "Beauté",
+  "Tech",
+  "Maison",
+  "Sport",
+  "Cuisine",
+  "Enfants",
+  "Auto",
+];
+
+export default function AuthView() {
+  const router = useRouter();
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [step, setStep] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  const [interests, setInterests] = useState<string[]>([]);
 
-  async function handleGoogleAuth() {
-    setLoading(true);
-    setError(null);
-    try {
-      const supabase = createClient();
-      const { error: authError } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: `${window.location.origin}/` },
-      });
-      if (authError) setError(authError.message);
-    } catch (e) {
-      setError("Connexion Google indisponible pour le moment.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const enter = () => router.push("/");
 
   return (
-    <main className="flex-1 flex flex-col min-h-0">
-      <div
-        className="flex-none flex flex-col items-center justify-center gap-3 py-10"
-        style={{ background: "linear-gradient(145deg, var(--ink), #3a2214)" }}
-      >
-        <div className="font-display font-extrabold text-gold text-[26px]">KORAA</div>
-        <p className="text-[13px] text-white/70 text-center max-w-[260px] px-4">
-          Découvre, suis et achète directement depuis tes créateurs préférés.
-        </p>
-      </div>
-
-      <div className="flex-1 px-5 -mt-6">
-        <div className="auth-card bg-white rounded-xl2 p-[26px_22px] shadow-soft">
-          <div className="flex bg-beige-light rounded-full p-1 mb-5">
-            {(["login", "signup", "forgot"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`flex-1 text-center py-2.5 rounded-full font-bold text-[13.5px] transition-colors ${
-                  tab === t ? "bg-ink text-white" : "text-grey-soft"
-                }`}
-              >
-                {t === "login" ? "Connexion" : t === "signup" ? "Inscription" : "Oublié"}
-              </button>
-            ))}
-          </div>
-
-          {error && (
-            <div className="bg-[rgba(182,68,55,0.1)] text-danger border border-[rgba(182,68,55,0.25)] rounded-sm2 px-3 py-2.5 text-[12.5px] font-semibold mb-3 leading-snug">
-              {error}
+    <section id="view-auth" className="view active">
+      <div className="auth-wrap">
+        {mode === "login" ? (
+          <>
+            <div className="auth-logo">
+              <div className="k-mark">K</div>
+              <h1>KORAA</h1>
+              <p>Le réseau social e-commerce d&apos;Afrique. Découvre, achète, partage, gagne.</p>
             </div>
-          )}
-
-          <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-            {tab === "signup" && (
-              <div className="field">
-                <label htmlFor="name">Nom complet</label>
-                <input id="name" type="text" placeholder="Votre nom" />
+            <div className="auth-card">
+              <div className="auth-tabs">
+                <button className="auth-tab active">Connexion</button>
+                <button className="auth-tab" onClick={() => { setMode("signup"); setStep(1); }}>
+                  Créer un compte
+                </button>
               </div>
-            )}
-            <div className="field">
-              <label htmlFor="email">Email</label>
-              <input id="email" type="email" placeholder="vous@exemple.com" />
-            </div>
-            {tab !== "forgot" && (
+              {error && <div className="auth-error" style={{ display: "block" }}>{error}</div>}
               <div className="field">
-                <label htmlFor="password">Mot de passe</label>
-                <input id="password" type="password" placeholder="••••••••" />
+                <label>Email ou téléphone</label>
+                <input type="text" placeholder="ex : aicha@email.com" />
               </div>
-            )}
-            <button type="submit" className="btn-gold w-full py-3.5 rounded-md2 font-bold text-[14.5px]">
-              {tab === "login" ? "Se connecter" : tab === "signup" ? "Créer mon compte" : "Envoyer le lien"}
-            </button>
-          </form>
-
-          <div className="flex items-center gap-3 my-5 text-[12px] text-grey-soft">
-            <span className="flex-1 h-px bg-line" /> ou <span className="flex-1 h-px bg-line" />
-          </div>
-
-          <div className="space-y-2.5">
-            <button
-              onClick={handleGoogleAuth}
-              disabled={loading}
-              className="btn-outline w-full py-3 rounded-md2 font-bold text-[13.5px] flex items-center justify-center gap-2 disabled:opacity-60"
-            >
-              {loading ? <span className="spin-loader" /> : null}
-              Continuer avec Google
-            </button>
-
-            <div className="tooltip-wrap">
-              <button
-                disabled
-                className="btn-ghost w-full py-3 rounded-md2 font-bold text-[13.5px] opacity-60 cursor-not-allowed"
-              >
-                Continuer avec TikTok
+              <div className="field">
+                <label>Mot de passe</label>
+                <input type="password" placeholder="••••••••" />
+              </div>
+              <button className="btn btn-gold btn-block" onClick={enter}>
+                Se connecter
               </button>
-              <span className="tooltip-bubble">Bientôt disponible</span>
+              <p className="auth-foot-link">
+                Pas encore de compte ?{" "}
+                <b onClick={() => { setMode("signup"); setStep(1); }}>Inscris-toi</b>
+              </p>
             </div>
-          </div>
+          </>
+        ) : (
+          <>
+            <div className="auth-logo" style={{ marginBottom: 10 }}>
+              <div className="k-mark" style={{ width: 48, height: 48, fontSize: 20 }}>K</div>
+              <h1 style={{ fontSize: 21 }}>Créer un compte</h1>
+            </div>
+            <div className="auth-card">
+              <div className="auth-step-dots">
+                {[1, 2, 3, 4].map((i) => (
+                  <span key={i} className={i <= step ? "on" : ""} />
+                ))}
+              </div>
+              {error && <div className="auth-error" style={{ display: "block" }}>{error}</div>}
 
-          <p className="auth-foot-link text-center text-[13px] text-grey-soft mt-4">
-            En continuant, tu acceptes les <b className="text-gold-dark">Conditions d&apos;utilisation</b>.
-          </p>
-        </div>
+              {step === 1 && (
+                <>
+                  <div className="field-row">
+                    <div className="field"><label>Nom</label><input placeholder="Koné" /></div>
+                    <div className="field"><label>Prénom</label><input placeholder="Aïcha" /></div>
+                  </div>
+                  <div className="field"><label>Email</label><input type="email" placeholder="aicha@email.com" /></div>
+                  <div className="field"><label>Téléphone</label><input type="tel" placeholder="+225 07 00 00 00 00" /></div>
+                  <div className="field-row">
+                    <div className="field"><label>Mot de passe</label><input type="password" placeholder="8 caractères min." /></div>
+                    <div className="field"><label>Confirmer</label><input type="password" placeholder="••••••••" /></div>
+                  </div>
+                  <div className="field-row">
+                    <div className="field"><label>Date de naissance</label><input type="date" /></div>
+                    <div className="field">
+                      <label>Sexe</label>
+                      <select>
+                        <option value="F">Femme</option>
+                        <option value="M">Homme</option>
+                        <option value="autre">Autre</option>
+                      </select>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {step === 2 && (
+                <>
+                  <div className="field"><label>Profession</label><input placeholder="Étudiant, commerçant..." /></div>
+                  <div className="field-row">
+                    <div className="field"><label>Ville</label><input defaultValue="Abidjan" /></div>
+                    <div className="field"><label>Commune</label><input placeholder="Cocody" /></div>
+                  </div>
+                  <div className="field"><label>Adresse</label><input placeholder="Rue, quartier..." /></div>
+                  <div className="field">
+                    <label>Langue</label>
+                    <select>{LANG_OPTIONS.map((l) => <option key={l}>{l}</option>)}</select>
+                  </div>
+                </>
+              )}
+
+              {step === 3 && (
+                <>
+                  <div className="field">
+                    <label>Centres d&apos;intérêt</label>
+                    <div className="chip-select">
+                      {INTEREST_OPTIONS.map((i) => (
+                        <button
+                          type="button"
+                          key={i}
+                          className={`chip-pick ${interests.includes(i) ? "picked" : ""}`}
+                          onClick={() =>
+                            setInterests((prev) =>
+                              prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]
+                            )
+                          }
+                        >
+                          {i}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <label className="consent-row">
+                    <input type="checkbox" /> J&apos;accepte que mes données soient utilisées pour
+                    personnaliser mon expérience KORAA, conformément à la politique de confidentialité.
+                  </label>
+                </>
+              )}
+
+              {step === 4 && (
+                <>
+                  <div className="field">
+                    <label>Code reçu par SMS</label>
+                    <input type="text" inputMode="numeric" maxLength={6} placeholder="123456" />
+                  </div>
+                  <p style={{ fontSize: 13, color: "rgba(255,255,255,.6)", margin: "-4px 0 4px" }}>
+                    Un code à 6 chiffres a été envoyé à ton numéro.
+                  </p>
+                  <p className="auth-foot-link"><b>Renvoyer le code</b></p>
+                </>
+              )}
+
+              <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+                {step > 1 && step < 4 && (
+                  <button className="btn btn-outline" onClick={() => setStep((s) => s - 1)}>
+                    Retour
+                  </button>
+                )}
+                <button
+                  className="btn btn-gold btn-block"
+                  onClick={() => (step >= 4 ? enter() : setStep((s) => s + 1))}
+                >
+                  {step === 3 ? "Créer mon compte" : step === 4 ? "Vérifier mon numéro" : "Continuer"}
+                </button>
+              </div>
+              <p className="auth-foot-link">
+                Déjà inscrit ? <b onClick={() => { setMode("login"); setError(null); }}>Se connecter</b>
+              </p>
+            </div>
+          </>
+        )}
       </div>
-    </main>
+    </section>
   );
 }

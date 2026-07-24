@@ -1,41 +1,51 @@
-import Link from "next/link";
-import { mockConversations } from "@/lib/mock-data";
+"use client";
 
-export default function MessagesPage() {
+import { useRouter } from "next/navigation";
+import { Icon } from "@/components/Icon";
+import { mockConversations, initials, gradFor } from "@/lib/mock-data";
+
+/** Faithful port of the prototype MESSAGES view (renderMessages / convRowHTML). */
+export default function MessagesView() {
+  const router = useRouter();
+  const convs = mockConversations;
+
   return (
-    <main className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-      <header className="flex-none px-4 pt-5 pb-3">
-        <h1 className="text-[22px]">Messages</h1>
-      </header>
-
-      <div className="flex-1">
-        {mockConversations.length === 0 && (
-          <p className="empty-state">Aucune conversation pour le moment.</p>
-        )}
-        {mockConversations.map((c) => (
-          <Link
-            key={c.id}
-            href={`/messages/${c.id}`}
-            className="conv-row flex items-center gap-3 px-[18px] py-3 border-b border-line"
-          >
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-beige to-gold-dark flex-none flex items-center justify-center font-display font-extrabold text-white">
-              {c.name.charAt(0)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <p className="font-semibold text-[13.5px] truncate">{c.name}</p>
-                <span className="cv-time text-[11px] text-grey-soft">{c.time}</span>
-              </div>
-              <p className="cv-preview text-[12.5px] text-grey-soft truncate max-w-[220px]">{c.preview}</p>
-            </div>
-            {c.unread > 0 && (
-              <span className="w-5 h-5 rounded-full bg-gold-dark text-white text-[10.5px] font-bold flex items-center justify-center flex-none">
-                {c.unread}
-              </span>
-            )}
-          </Link>
-        ))}
+    <section id="view-messages" className="view active">
+      <div className="topbar">
+        <div className="brand">
+          <span className="brand-dot" />
+          Messages
+        </div>
       </div>
-    </main>
+      <div className="view-scroll">
+        {convs.length ? (
+          convs.map((c) => (
+            <div
+              key={c.id}
+              className="conv-row"
+              style={{ cursor: "pointer" }}
+              onClick={() => router.push(`/messages/${c.id}`)}
+            >
+              <div className="cv-avatar" style={{ background: gradFor(c.name) }}>
+                {initials(c.name)}
+              </div>
+              <div className="cv-body">
+                <div className="cv-top">
+                  <span className="cv-name">{c.name}</span>
+                  <span className="cv-time">{c.time}</span>
+                </div>
+                <div className="cv-preview">{c.preview}</div>
+              </div>
+              {c.unread ? <span className="cv-unread" /> : null}
+            </div>
+          ))
+        ) : (
+          <div className="empty-state">
+            <Icon name="message" size={32} />
+            <p>Aucune conversation pour le moment.</p>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

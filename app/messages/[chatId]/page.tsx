@@ -1,106 +1,109 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { mockConversations, mockMessages, type MockMessage } from "@/lib/mock-data";
+import { useState, useEffect, useRef, use } from "react";
+import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
+import {
+  mockConversations,
+  mockMessages,
+  shopOf,
+  initials,
+  gradFor,
+  type MockMessage,
+} from "@/lib/mock-data";
 
-export default function ChatPage() {
-  const params = useParams<{ chatId: string }>();
-  const chatId = params.chatId;
-  const conversation = mockConversations.find((c) => c.id === chatId);
+/** Faithful port of the prototype CHAT view (renderChat). */
+export default function ChatView({ params }: { params: Promise<{ chatId: string }> }) {
+  const { chatId } = use(params);
+  const router = useRouter();
+
+  const conv = mockConversations.find((c) => c.id === chatId);
+  const shop = shopOf(chatId);
+  const title = conv?.name ?? shop?.name ?? "Conversation";
+  const color = gradFor(title);
+
   const [messages, setMessages] = useState<MockMessage[]>(
     mockMessages.filter((m) => m.chatId === chatId)
   );
   const [draft, setDraft] = useState("");
-  const bottomRef = useRef<HTMLDivElement>(null);
-
-  // Realtime wiring: subscribes to INSERTs on `messages` for this chat.
-  // No-ops gracefully until real Supabase env vars + table exist.
-  useEffect(() => {
-    let channel: ReturnType<ReturnType<typeof createClient>["channel"]> | null = null;
-    try {
-      const supabase = createClient();
-      channel = supabase
-        .channel(`messages:${chatId}`)
-        .on(
-          "postgres_changes",
-          { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${chatId}` },
-          (payload) => {
-            const row = payload.new as { id: string; author_id: string; content: string; created_at: string };
-            setMessages((prev) => [
-              ...prev,
-              { id: row.id, chatId, author: "them", text: row.content, time: row.created_at },
-            ]);
-          }
-        )
-        .subscribe();
-    } catch {
-      // Supabase not configured yet — chat still renders with mock data.
-    }
-    return () => {
-      channel?.unsubscribe();
-    };
-  }, [chatId]);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
 
-  function handleSend(e: React.FormEvent) {
-    e.preventDefault();
-    if (!draft.trim()) return;
+  function send() {
+    const val = draft.trim();
+    if (!val) return;
     setMessages((prev) => [
       ...prev,
-      { id: `local-${Date.now()}`, chatId, author: "me", text: draft.trim(), time: "maintenant" },
+      { id: `m-${Date.now()}`, chatId, mine: true, text: val, time: "maintenant" },
     ]);
     setDraft("");
-    // TODO: supabase.from("messages").insert({ conversation_id: chatId, content: draft })
+    // Simulated shop assistant reply (matches prototype behaviour).
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `m-${Date.now()}-ai`,
+          chatId,
+          mine: false,
+          text: `🤖 Assistant ${title} — Merci pour ton message ! Un vendeur va te répondre très vite.`,
+          time: "maintenant",
+        },
+      ]);
+    }, 800);
   }
 
   return (
-    <main className="flex-1 flex flex-col min-h-0">
-      <header className="flex-none flex items-center gap-3 px-4 py-3 border-b border-line">
-        <Link href="/messages" aria-label="Retour">
-          <Icon name="chevron-left" size={20} />
-        </Link>
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-beige to-gold-dark flex items-center justify-center font-display font-extrabold text-white text-[13px]">
-          {(conversation?.name ?? "?").charAt(0)}
-        </div>
-        <p className="font-semibold text-[14px]">{conversation?.name ?? "Conversation"}</p>
-      </header>
-
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-        {messages.map((m) => (
-          <div key={m.id} className={`flex ${m.author === "me" ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`max-w-[75%] px-3.5 py-2.5 rounded-md2 text-[13.5px] ${
-                m.author === "me" ? "bg-gold text-white" : "bg-beige-light text-ink"
-              }`}
-            >
-              {m.text}
-              <div className={`text-[10px] mt-1 ${m.author === "me" ? "text-white/70" : "text-grey-soft"}`}>
-                {m.time}
-              </div>
-            </div>
+    <section id="view-chat" className="view active">
+      <div className="topbar">
+        <button className="icon-btn" onClick={() => router.push("/messages")}>
+          <Icon name="chevLeft" size={18} />
+        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            className="cv-avatar"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 12,
+              background: color,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#fff",
+              fontWeight: 800,
+              fontSize: 13,
+            }}
+          >
+            {initials(title)}
           </div>
-        ))}
-        <div ref={bottomRef} />
+          <div className="brand" style={{ fontSize: 15 }}>
+            {title}
+          </div>
+        </div>
       </div>
 
-      <form onSubmit={handleSend} className="chat-inputbar flex-none flex gap-2.5 items-center px-3.5 py-2.5 border-t border-line bg-white">
+      <div className="chat-scroll" ref={scrollRef}>
+        {messages.map((m) => (
+          <div key={m.id} className={`msg-bubble ${m.mine ? "mine" : "theirs"}`}>
+            {m.text}
+          </div>
+        ))}
+      </div>
+
+      <div className="chat-inputbar">
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Écris un message..."
-          className="flex-1 px-4 py-2.5 rounded-full bg-beige-light border border-line text-[13.5px] outline-none"
+          onKeyDown={(e) => e.key === "Enter" && send()}
+          placeholder="Écrire un message..."
         />
-        <button type="submit" className="btn-gold w-10 h-10 rounded-full flex items-center justify-center flex-none">
-          <Icon name="send" size={16} />
+        <button className="send-btn" onClick={send}>
+          <Icon name="send" size={18} />
         </button>
-      </form>
-    </main>
+      </div>
+    </section>
   );
 }

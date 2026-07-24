@@ -2,36 +2,50 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Icon } from "./Icon";
+import { Icon, type IconName } from "./Icon";
 
-const items = [
-  { href: "/", label: "Accueil", icon: "home" as const },
-  { href: "/shop", label: "Boutique", icon: "shop" as const },
-  { href: "/create", label: "Publier", icon: "plus" as const, fab: true },
-  { href: "/messages", label: "Message", icon: "message" as const },
-  { href: "/profile", label: "Profil", icon: "user" as const },
+/**
+ * Faithful port of the prototype's #bottom-nav (renderBottomNav / navItems).
+ * Order and labels lifted 1:1 from index (3).html: feed→Actualité,
+ * discover→Boutique, create→Créer (+), messages→Messages, profile→Profil.
+ */
+const NAV_ITEMS: {
+  href: string;
+  match: string;
+  label: string;
+  icon: IconName;
+  isCreate?: boolean;
+}[] = [
+  { href: "/", match: "/", label: "Actualité", icon: "feed" },
+  { href: "/discover", match: "/discover", label: "Boutique", icon: "compass" },
+  { href: "/create", match: "/create", label: "Créer", icon: "plus", isCreate: true },
+  { href: "/messages", match: "/messages", label: "Messages", icon: "message" },
+  { href: "/profile", match: "/profile", label: "Profil", icon: "user" },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="bottom-nav">
-      {items.map((item) => {
+    <nav id="bottom-nav">
+      {NAV_ITEMS.map((item) => {
         const active =
-          item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-
-        if (item.fab) {
+          item.match === "/" ? pathname === "/" : pathname.startsWith(item.match);
+        if (item.isCreate) {
           return (
-            <Link key={item.href} href={item.href} className="nav-fab" aria-label={item.label}>
-              <Icon name="plus" size={22} />
+            <Link key={item.href} href={item.href} className="nav-btn create-btn">
+              <Icon name={item.icon} size={22} />
+              <span>{item.label}</span>
             </Link>
           );
         }
-
         return (
-          <Link key={item.href} href={item.href} className={`nav-btn ${active ? "active" : ""}`}>
-            <Icon name={item.icon} size={21} />
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`nav-btn ${active ? "active" : ""}`}
+          >
+            <Icon name={item.icon} size={22} />
             <span>{item.label}</span>
           </Link>
         );

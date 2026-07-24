@@ -3,122 +3,132 @@
 import { useState } from "react";
 import { Icon } from "@/components/Icon";
 
-function isValidVideoLink(url: string) {
-  return /youtu\.?be|tiktok\.com/i.test(url);
-}
+/** Faithful port of the prototype CREATE view (renderCreate — "Devenir Créateur" state). */
+const WIZARD_STEPS = [
+  { title: "Acheter un produit", sub: "Choisis un produit dans une boutique Premium" },
+  { title: "Recevoir le produit", sub: "Ta commande est livrée chez toi" },
+  { title: "Réaliser une vidéo authentique", sub: "Filme ton avis sincère avec ton smartphone" },
+  { title: "Publier la vidéo", sub: "Ajoute une description et des hashtags" },
+  { title: "Associer la vidéo au produit", sub: "Le lien d'achat apparaît automatiquement" },
+  { title: "Partager ton lien", sub: "Chaque vente te rapporte une commission" },
+];
 
-export default function CreatePage() {
-  const [link, setLink] = useState("");
-  const [caption, setCaption] = useState("");
-  const [productId, setProductId] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
-
-  const linkValid = link.length > 0 && isValidVideoLink(link);
-
-  async function handlePublish(e: React.FormEvent) {
-    e.preventDefault();
-    if (!linkValid) return;
-    setSubmitting(true);
-    // TODO: insert into Supabase `posts` table with { video_url: link, caption, product_id }
-    await new Promise((r) => setTimeout(r, 700));
-    setSubmitting(false);
-    setDone(true);
-  }
+export default function CreateView() {
+  const [sheet, setSheet] = useState(false);
 
   return (
-    <main className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-      <header className="flex-none px-4 pt-5 pb-3">
-        <h1 className="text-[22px]">Publier</h1>
-        <p className="text-[13px] text-grey-soft">
-          Colle un lien YouTube ou TikTok existant — pas d&apos;upload natif pour l&apos;instant.
-        </p>
-      </header>
+    <section id="view-create" className="view active">
+      <div className="topbar">
+        <div className="brand">
+          <span className="brand-dot" />
+          Devenir Créateur
+        </div>
+      </div>
 
-      {done ? (
-        <div className="empty-state flex flex-col items-center gap-3">
-          <Icon name="check" size={40} className="text-success" />
-          <p className="font-display font-bold text-ink">Publication envoyée !</p>
-          <button onClick={() => { setDone(false); setLink(""); setCaption(""); }} className="btn-gold px-5 py-2.5 rounded-md2 font-bold text-[13px]">
-            Publier autre chose
+      <div className="view-scroll">
+        <div className="creator-hero">
+          <h3>Transforme ta voix en revenu</h3>
+          <p>
+            Achète, filme, publie : chaque vente générée par tes vidéos te rapporte une commission
+            automatique.
+          </p>
+          <button className="btn btn-gold" onClick={() => setSheet(true)}>
+            Publier ma première vidéo
           </button>
         </div>
-      ) : (
-        <form onSubmit={handlePublish} className="px-4 space-y-4">
-          <div className="wizard-step">
-            <span className="w-11 h-11 rounded-md2 bg-beige-light flex items-center justify-center flex-none text-gold-dark">
-              <Icon name="link" size={20} />
-            </span>
-            <div className="flex-1">
-              <p className="font-semibold text-[13.5px]">Lien de la vidéo</p>
-              <p className="text-[11.5px] text-grey-soft">YouTube ou TikTok</p>
+
+        <div className="section-row">
+          <h3>Comment ça marche</h3>
+        </div>
+        <div className="wizard-steps">
+          {WIZARD_STEPS.map((s, i) => (
+            <div className="wizard-step" key={i}>
+              <div className="ws-num">{i + 1}</div>
+              <div>
+                <div className="ws-title">{s.title}</div>
+                <div className="ws-sub">{s.sub}</div>
+              </div>
             </div>
-          </div>
+          ))}
+        </div>
 
-          <div className="field">
-            <label htmlFor="video-link">URL de la vidéo</label>
-            <input
-              id="video-link"
-              type="url"
-              placeholder="https://www.tiktok.com/..."
-              value={link}
-              onChange={(e) => setLink(e.target.value)}
-            />
-            {link.length > 0 && !linkValid && (
-              <p className="text-danger text-[11.5px] mt-1.5 font-medium">
-                Le lien doit provenir de YouTube ou TikTok.
-              </p>
-            )}
-          </div>
-
-          <div className="field">
-            <label htmlFor="caption">Légende</label>
-            <textarea
-              id="caption"
-              rows={3}
-              placeholder="Décris ta publication..."
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-            />
-          </div>
-
-          <div className="field">
-            <label htmlFor="product">Produit associé (optionnel)</label>
-            <select id="product" value={productId} onChange={(e) => setProductId(e.target.value)}>
-              <option value="">Aucun</option>
-              <option value="prod-1">Robe wax imprimée</option>
-              <option value="prod-2">Écouteurs sans fil</option>
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            disabled={!linkValid || submitting}
-            className="btn-gold w-full py-3.5 rounded-md2 font-bold text-[14.5px] flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {submitting && <span className="spin-loader" />}
-            Publier
+        <div style={{ padding: "0 18px 24px" }}>
+          <button className="btn btn-outline btn-block">
+            <Icon name="building" size={16} /> Vous représentez une entreprise ?
           </button>
+        </div>
+      </div>
 
-          <div className="tooltip-wrap">
-            <button
-              type="button"
-              disabled
-              className="create-opt w-full flex items-center gap-3 p-3.5 rounded-md2 border border-line opacity-60 cursor-not-allowed"
-            >
-              <span className="w-10 h-10 rounded-md2 flex items-center justify-center text-white" style={{ background: "linear-gradient(145deg,var(--danger),#7c261c)" }}>
-                <Icon name="live" size={18} />
-              </span>
-              <span className="flex-1 text-left">
-                <span className="block font-semibold text-[13px]">Lancer un live</span>
-                <span className="block text-[12px] text-grey-soft">Diffuse en direct à tes abonnés</span>
-              </span>
-              <Icon name="chevron-right" size={16} />
-            </button>
-            <span className="tooltip-bubble">Bientôt disponible</span>
+      {sheet && <CreateOptionsSheet onClose={() => setSheet(false)} />}
+    </section>
+  );
+}
+
+/** Faithful port of openCreateOptionsSheet — publish via YouTube/TikTok link
+ *  or upload; live is disabled ("bientôt disponible") to spare storage. */
+function CreateOptionsSheet({ onClose }: { onClose: () => void }) {
+  const options: {
+    icon: Parameters<typeof Icon>[0]["name"];
+    color: string;
+    title: string;
+    sub: string;
+    disabled?: boolean;
+  }[] = [
+    {
+      icon: "link",
+      color: "linear-gradient(145deg,var(--gold),var(--gold-dark))",
+      title: "Coller un lien YouTube / TikTok",
+      sub: "Publie une vidéo hébergée ailleurs, sans surcharger le stockage.",
+    },
+    {
+      icon: "video",
+      color: "linear-gradient(145deg,#2f6fef,#1b3d8a)",
+      title: "Téléverser une vidéo",
+      sub: "Depuis ta galerie — associée automatiquement à une boutique.",
+    },
+    {
+      icon: "camera",
+      color: "linear-gradient(145deg,#8a6f5c,#3a2c22)",
+      title: "Lancer un live",
+      sub: "Bientôt disponible.",
+      disabled: true,
+    },
+  ];
+
+  return (
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="sheet-handle" />
+        <div className="sheet-head">
+          <h4>Publier du contenu</h4>
+          <button className="icon-btn" onClick={onClose} style={{ transform: "rotate(45deg)" }}>
+            <Icon name="plus" size={16} />
+          </button>
+        </div>
+        <div className="sheet-body">
+          <div className="create-opt-grid">
+            {options.map((o) => (
+              <button
+                key={o.title}
+                className="create-opt"
+                style={o.disabled ? { opacity: 0.55 } : undefined}
+                disabled={o.disabled}
+              >
+                <span className="co-icon" style={{ background: o.color }}>
+                  <Icon name={o.icon} size={22} />
+                </span>
+                <span className="co-text">
+                  <b>{o.title}</b>
+                  <span>{o.sub}</span>
+                </span>
+                <span className="co-chev">
+                  <Icon name="chevRight" size={18} />
+                </span>
+              </button>
+            ))}
           </div>
-        </form>
-      )}
-    </main>
+        </div>
+      </div>
+    </div>
   );
 }

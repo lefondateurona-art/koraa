@@ -1,68 +1,129 @@
-import Link from "next/link";
-import { mockPosts, mockShops, mockCategories } from "@/lib/mock-data";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
+import { ShopCard, ProductCard, CreatorRow } from "@/components/Cards";
+import { mockShops, mockCreators, allProducts, topHashtags } from "@/lib/mock-data";
 
-export default function DiscoverPage() {
+type Tab = "shops" | "creators" | "products" | "hashtags";
+const TABS: { id: Tab; label: string }[] = [
+  { id: "shops", label: "Boutiques" },
+  { id: "creators", label: "Créateurs" },
+  { id: "products", label: "Produits" },
+  { id: "hashtags", label: "Hashtags" },
+];
+
+/** Faithful port of the prototype DISCOVER view (renderDiscover). */
+export default function DiscoverView() {
+  const router = useRouter();
+  const [tab, setTab] = useState<Tab>("shops");
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+
+  const openShop = (id: string) => router.push(`/shop/${id}`);
+
   return (
-    <main className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-      <header className="flex-none px-4 pt-5 pb-3">
-        <h1 className="text-[22px]">Découvrir</h1>
-        <Link
-          href="/search"
-          className="mt-3 flex items-center gap-2 px-4 py-3 rounded-md2 bg-beige-light text-grey-soft text-[13.5px]"
-        >
-          <Icon name="search" size={17} />
-          Rechercher créateurs, boutiques, produits...
-        </Link>
-      </header>
+    <section id="view-discover" className="view active">
+      <div className="topbar">
+        <div className="brand">
+          <span className="brand-dot" />
+          Boutique
+        </div>
+        <div className="tb-actions">
+          <button className="icon-btn">
+            <Icon name="heart" size={17} />
+          </button>
+        </div>
+      </div>
 
-      <div className="flex-none flex gap-2 px-4 pb-3 overflow-x-auto">
-        {mockCategories.map((cat, i) => (
-          <span key={cat} className={`chip ${i === 0 ? "active" : ""}`}>
-            {cat}
-          </span>
+      <div className="search-bar" style={{ padding: "8px 16px" }}>
+        <Icon name="search" size={17} />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Rechercher boutiques, créateurs, produits..."
+          style={{ flex: 1, background: "transparent", border: "none", fontSize: "13.5px" }}
+        />
+      </div>
+
+      <div className="discover-tabs">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            className={`chip ${tab === t.id ? "active" : ""}`}
+            onClick={() => setTab(t.id)}
+          >
+            {t.label}
+          </button>
         ))}
       </div>
 
-      <section className="px-4 pb-3">
-        <h2 className="text-[15px] mb-2">Boutiques populaires</h2>
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {mockShops.map((shop) => (
-            <Link
-              key={shop.id}
-              href={`/shop/${shop.id}`}
-              className="flex-none w-[150px] rounded-lg2 overflow-hidden bg-white border border-line shadow-card"
-            >
-              <div className="h-24 bg-gradient-to-br from-beige to-gold-dark" />
-              <div className="p-3">
-                <p className="font-display font-bold text-[13.5px] truncate">{shop.name}</p>
-                <p className="text-[11px] text-grey-soft mb-2">{shop.category}</p>
-                <div className="flex gap-2.5 text-[10.5px] text-grey-soft">
-                  <span>{shop.followers.toLocaleString("fr-FR")} abonnés</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+      <div className="view-scroll" id="discover-body">
+        {tab === "shops" && (
+          <>
+            <div className="section-row">
+              <h3>Boutiques Premium</h3>
+              <span className="see-all">{mockShops.length} boutiques</span>
+            </div>
+            <div className="product-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+              {mockShops
+                .filter((s) => !q || s.name.toLowerCase().includes(q) || s.cat.toLowerCase().includes(q))
+                .map((s) => (
+                  <ShopCard key={s.id} shop={s} onOpen={() => openShop(s.id)} />
+                ))}
+            </div>
+          </>
+        )}
 
-      <section className="px-4 pb-6 grid grid-cols-2 gap-3">
-        {mockPosts.concat(mockPosts).map((post, i) => (
-          <Link
-            key={`${post.id}-${i}`}
-            href={`/shop/${post.shopId}`}
-            className="rounded-lg2 overflow-hidden bg-white border border-line shadow-card"
-          >
-            <div className="h-40 bg-gradient-to-br from-beige-light to-beige flex items-center justify-center text-[11px] text-grey-soft">
-              {post.thumbnailLabel}
+        {tab === "creators" && (
+          <>
+            <div className="section-row">
+              <h3>Classement des créateurs</h3>
+              <span className="see-all">🏆 Top {mockCreators.length}</span>
             </div>
-            <div className="p-2.5">
-              <p className="text-[12.5px] font-semibold truncate">{post.productName}</p>
-              <p className="text-[11px] text-grey-soft">{post.creatorHandle}</p>
+            <div className="dash-list">
+              {mockCreators
+                .filter((c) => !q || c.name.toLowerCase().includes(q))
+                .map((c, i) => (
+                  <CreatorRow key={c.id} creator={c} rank={i} />
+                ))}
             </div>
-          </Link>
-        ))}
-      </section>
-    </main>
+          </>
+        )}
+
+        {tab === "products" && (
+          <>
+            <div className="section-row">
+              <h3>Produits tendance</h3>
+            </div>
+            <div className="product-grid">
+              {allProducts()
+                .filter((p) => !q || p.name.toLowerCase().includes(q))
+                .slice(0, 20)
+                .map((p) => (
+                  <ProductCard key={p.id} product={p} onOpen={() => openShop(p.shopId)} />
+                ))}
+            </div>
+          </>
+        )}
+
+        {tab === "hashtags" && (
+          <>
+            <div className="section-row">
+              <h3>Hashtags populaires</h3>
+            </div>
+            <div className="hscroll" style={{ flexWrap: "wrap" }}>
+              {topHashtags.map(([h, c]) => (
+                <div className="hashtag-pill" key={h}>
+                  <div className="ht-name">{h}</div>
+                  <div className="ht-count">{c} vidéos</div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </section>
   );
 }

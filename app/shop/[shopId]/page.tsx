@@ -1,122 +1,108 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { notFound, useParams } from "next/navigation";
-import { mockShops, mockProducts, fmtFCFA } from "@/lib/mock-data";
+import { useState, use } from "react";
+import { useRouter } from "next/navigation";
 import { Icon } from "@/components/Icon";
+import { shopOf, mockPosts, fmtCompact, initials } from "@/lib/mock-data";
+import { ProductCard } from "@/components/Cards";
 
-// TODO: replace with a real auth check once Supabase auth is wired up.
-const CURRENT_USER_ID: string | null = null;
-const SHOP_OWNER_MAP: Record<string, string> = {}; // shopId -> owner user id, filled from Supabase later
+/** Faithful port of the prototype SHOP DETAIL view (renderShop). */
+export default function ShopDetailView({
+  params,
+}: {
+  params: Promise<{ shopId: string }>;
+}) {
+  const { shopId } = use(params);
+  const router = useRouter();
+  const s = shopOf(shopId);
+  const [following, setFollowing] = useState(false);
+  const [fav, setFav] = useState(false);
 
-export default function ShopDetailPage() {
-  const params = useParams<{ shopId: string }>();
-  const shop = mockShops.find((s) => s.id === params.shopId);
-  const [tab, setTab] = useState<"products" | "posts">("products");
+  if (!s) {
+    router.replace("/discover");
+    return null;
+  }
 
-  if (!shop) return notFound();
-
-  const products = mockProducts.filter((p) => p.shopId === shop.id);
-  const isOwner = CURRENT_USER_ID !== null && SHOP_OWNER_MAP[shop.id] === CURRENT_USER_ID;
+  const cats = [...new Set(s.products.map((p) => p.cat))];
+  const videoCount = mockPosts.filter((p) => p.shopId === s.id).length;
 
   return (
-    <main className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-      <header className="flex-none relative h-36 bg-gradient-to-br from-beige to-gold-dark">
-        <Link href="/shop" className="absolute top-4 left-4 bg-white/90 rounded-full p-2">
-          <Icon name="chevron-left" size={18} />
-        </Link>
-        {isOwner && (
-          <button className="absolute top-4 right-4 bg-white/90 rounded-full px-3 py-2 text-[12px] font-bold flex items-center gap-1">
-            <Icon name="settings" size={15} /> Gérer
+    <section id="view-shop" className="view active">
+      <div className="view-scroll">
+        <div className="shop-hero" style={{ background: `linear-gradient(135deg,${s.color},#1c1c1c)` }}>
+          <button className="icon-btn on-dark sh-back" onClick={() => router.push("/discover")}>
+            <Icon name="chevLeft" size={18} />
           </button>
-        )}
-      </header>
-
-      <section className="px-4 -mt-8">
-        <div className="w-16 h-16 rounded-[18px] bg-white border-[3px] border-white shadow-soft flex items-center justify-center font-display font-extrabold text-[22px]">
-          {shop.logoInitial}
-        </div>
-        <h1 className="text-[19px] mt-2">{shop.name}</h1>
-        <p className="text-[12.5px] text-grey-soft mt-0.5">{shop.category}</p>
-        <p className="text-[13px] text-grey mt-2 leading-snug">
-          Boutique certifiée KORAA. Livraison rapide, produits vérifiés.
-        </p>
-
-        <div className="grid grid-cols-3 gap-2 mt-4">
-          {[
-            { label: "Abonnés", value: shop.followers.toLocaleString("fr-FR") },
-            { label: "Produits", value: shop.products },
-            { label: "Note", value: `${shop.rating} ★` },
-          ].map((s) => (
-            <div key={s.label} className="stat-tile text-center">
-              <div className="font-display font-extrabold text-[16px]">{s.value}</div>
-              <div className="text-[11px] text-grey-soft">{s.label}</div>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex gap-2 mt-4">
-          <button className="btn-gold flex-1 py-3 rounded-md2 font-bold text-[13.5px]">Suivre</button>
-          <Link
-            href="/messages/chat-1"
-            className="btn-outline flex-1 py-3 rounded-md2 font-bold text-[13.5px] text-center"
-          >
-            Message
-          </Link>
-        </div>
-      </section>
-
-      <div className="flex-none flex px-4 gap-4 border-b border-line mt-5">
-        {(["products", "posts"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`py-3 text-[13px] font-bold border-b-2 ${
-              tab === t ? "border-gold-dark text-ink" : "border-transparent text-grey-soft"
-            }`}
-          >
-            {t === "products" ? "Produits" : "Publications"}
-          </button>
-        ))}
-      </div>
-
-      {tab === "products" ? (
-        <div className="px-4 py-3 grid grid-cols-2 gap-3">
-          {products.map((product) => (
-            <div key={product.id} className="product-card rounded-lg2 overflow-hidden bg-white border border-line shadow-card">
-              <div className="h-32 bg-beige-light flex items-center justify-center text-[11px] text-grey-soft">
-                {product.name}
-              </div>
-              <div className="p-2.5">
-                <p className="text-[10.5px] text-grey-soft mb-1">{shop.name}</p>
-                <p className="text-[12.5px] font-semibold truncate">{product.name}</p>
-                <div className="flex items-baseline gap-1.5 mt-1">
-                  <span className="font-display font-extrabold text-[13.5px] text-gold-dark">
-                    {fmtFCFA(product.price)}
-                  </span>
-                  {product.oldPrice && (
-                    <span className="text-[11px] text-grey-soft line-through">{fmtFCFA(product.oldPrice)}</span>
-                  )}
-                </div>
-                {isOwner && (
-                  <button className="btn-ghost w-full mt-2 py-1.5 rounded-sm2 text-[11px] font-bold">
-                    Modifier
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-          {isOwner && (
-            <button className="rounded-lg2 border-2 border-dashed border-line flex flex-col items-center justify-center gap-1 py-10 text-grey-soft text-[12px] font-semibold">
-              <Icon name="plus" size={22} />
-              Ajouter un produit
+          <div className="sh-actions">
+            <button className="icon-btn on-dark" onClick={() => setFav((v) => !v)}>
+              <Icon name={fav ? "heartFill" : "heart"} size={17} />
             </button>
-          )}
+            <button className="icon-btn on-dark" onClick={() => router.push(`/messages/${s.id}`)}>
+              <Icon name="message" size={16} />
+            </button>
+          </div>
         </div>
-      ) : (
-        <p className="empty-state">Aucune publication pour le moment.</p>
-      )}
-    </main>
+
+        <div className="shop-identity">
+          <div className="si-logo" style={{ color: s.color as string }}>
+            {initials(s.name)}
+          </div>
+          <div className="si-name">
+            {s.name}{" "}
+            <span style={{ color: "var(--gold-dark)", fontSize: 12 }}>★ {s.rating}</span>
+          </div>
+          <div className="si-cat">{s.cat} · synchronisé depuis Orbit City</div>
+          <div className="si-desc">{s.desc}</div>
+        </div>
+
+        <div className="shop-stats-row">
+          <div className="ssr-item">
+            <div className="ssr-num">{fmtCompact(s.followers)}</div>
+            <div className="ssr-label">Abonnés</div>
+          </div>
+          <div className="ssr-item">
+            <div className="ssr-num">{s.products.length}</div>
+            <div className="ssr-label">Produits</div>
+          </div>
+          <div className="ssr-item">
+            <div className="ssr-num">{videoCount}</div>
+            <div className="ssr-label">Vidéos</div>
+          </div>
+        </div>
+
+        <div className="shop-cta-row">
+          <button
+            className={`btn ${following ? "btn-ghost" : "btn-gold"}`}
+            onClick={() => setFollowing((v) => !v)}
+          >
+            {following ? "Suivi ✓" : "Suivre la boutique"}
+          </button>
+          <button className="btn btn-outline">
+            <Icon name="share" size={15} /> Partager
+          </button>
+        </div>
+
+        <div className="shop-cats">
+          {cats.map((c) => (
+            <span className="chip" key={c}>
+              {c}
+            </span>
+          ))}
+        </div>
+
+        <div className="section-row">
+          <h3>Catalogue</h3>
+        </div>
+        <div className="product-grid">
+          {s.products.map((p) => (
+            <ProductCard
+              key={p.id}
+              product={{ ...p, shopId: s.id, shopName: s.name, shopColor: s.color }}
+              onOpen={() => {}}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
