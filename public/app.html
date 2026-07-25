@@ -1,0 +1,3166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>KORAA — Le commerce social d'Afrique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* ============ RESET & TOKENS ============ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --beige:#FFC98A;
+  --beige-dark:#F4903B;
+  --cream:#FFFBF7;
+  --beige-light:#FFF1E2;
+  --ink:#201510;
+  --grey:#3a2c22;
+  --grey-soft:#8a6f5c;
+  --gold:#E8770D;
+  --gold-dark:#B8560A;
+  --gold-soft:rgba(232,119,13,.14);
+  --white:#ffffff;
+  --line:#f2ddc4;
+  --danger:#b64437;
+  --success:#3f7d5c;
+  --feed-bg:#160f0a;
+  --feed-card:#241611;
+  --feed-line:#3d281c;
+  --r-xl:26px;
+  --r-lg:20px;
+  --r-md:14px;
+  --r-sm:10px;
+  --sh-soft:0 14px 34px -16px rgba(28,20,10,.22);
+  --sh-card:0 10px 24px -14px rgba(28,20,10,.28);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+html,body{height:100%;}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+h1,h2,h3,h4,h5{font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;letter-spacing:-0.01em;line-height:1.15;color:var(--ink);}
+button,input,select,textarea{font-family:inherit;color:inherit;}
+button{cursor:pointer;background:none;border:none;}
+a{color:inherit;text-decoration:none;}
+img{max-width:100%;display:block;}
+::selection{background:var(--gold);color:#fff;}
+:focus-visible{outline:2px solid var(--gold-dark);outline-offset:2px;border-radius:6px;}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important;}}
+
+.hidden{display:none !important;}
+.mono-num{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;}
+
+/* ============ APP FRAME (mobile-first, centered on desktop) ============ */
+#koraa-root{
+  height:100%;
+  width:100%;
+  display:flex;
+  align-items:stretch;
+  justify-content:center;
+  background:linear-gradient(160deg,#FFE7C7,#FFB768 55%,#F4903B);
+  position:relative;
+  overflow:hidden;
+}
+#phone-frame{
+  position:relative;
+  width:100%;
+  max-width:460px;
+  height:100%;
+  max-height:960px;
+  margin:auto;
+  background:var(--cream);
+  overflow:hidden;
+  box-shadow:0 40px 90px -30px rgba(28,20,10,.45);
+  z-index:2;
+}
+@media (min-width:560px){
+  #phone-frame{ margin:18px auto; height:calc(100% - 36px); border-radius:38px; border:8px solid #1c1c1c; }
+}
+/* ---------- Tablette (561px – 1024px) : cadre un peu plus grand, aéré ---------- */
+@media (min-width:561px) and (max-width:1024px){
+  #phone-frame{ max-width:420px; max-height:880px; }
+}
+/* ---------- Écran géant / grand moniteur (≥1600px) : cadre agrandi + habillage de fond ---------- */
+@media (min-width:1600px){
+  #phone-frame{ max-width:480px; max-height:1000px; border-width:10px; }
+  #koraa-root::before{
+    content:'KORAA';
+    position:absolute; left:8%; top:50%; transform:translateY(-50%);
+    font-family:'Plus Jakarta Sans',sans-serif; font-weight:800; font-size:96px;
+    color:rgba(255,255,255,.16); letter-spacing:-0.02em; pointer-events:none;
+  }
+  #koraa-root::after{
+    content:'Le commerce social d\'Afrique';
+    position:absolute; left:8%; top:calc(50% + 62px);
+    font-family:'Inter',sans-serif; font-weight:600; font-size:17px;
+    color:rgba(255,255,255,.55); letter-spacing:.02em; pointer-events:none;
+  }
+}
+
+/* ============ TOP STATUS-ISH BAR (brand) ============ */
+.view{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  background:var(--cream);
+  opacity:0;pointer-events:none;
+  transform:translateY(6px);
+  transition:opacity .22s ease, transform .22s ease;
+}
+.view.active{opacity:1;pointer-events:auto;transform:translateY(0);}
+
+.topbar{
+  flex:none;
+  display:flex;align-items:center;gap:10px;
+  padding:16px 18px 12px;
+  background:var(--cream);
+  border-bottom:1px solid transparent;
+}
+.topbar .brand{
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:19px;letter-spacing:.01em;
+  display:flex;align-items:center;gap:8px;
+}
+.brand .brand-dot{width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px var(--gold-soft);}
+.topbar .tb-actions{margin-left:auto;display:flex;flex-direction:row;align-items:center;gap:8px;}
+.icon-btn{
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--beige-light);color:var(--grey);
+  position:relative;flex:none;
+  transition:transform .15s ease, background .15s ease;
+}
+.icon-btn:active{transform:scale(.92);}
+.icon-btn.on-dark{background:rgba(255,255,255,.14);color:#fff;backdrop-filter:blur(6px);}
+.icon-btn .badge-dot{
+  position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;
+  background:var(--danger);border:2px solid var(--cream);
+}
+.icon-btn.on-dark .badge-dot{border-color:#1a1512;}
+
+.page-title{font-size:22px;padding:2px 18px 12px;flex:none;}
+.page-sub{font-size:13px;color:var(--grey-soft);padding:0 18px 10px;flex:none;margin-top:-8px;}
+
+.view-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.view-scroll::-webkit-scrollbar{display:none;}
+
+/* ============ BOTTOM NAV ============ */
+#bottom-nav{
+  position:absolute;left:0;right:0;bottom:0;
+  display:flex;align-items:center;justify-content:space-around;
+  padding:10px 6px calc(10px + var(--safe-bottom));
+  background:rgba(250,248,245,.92);backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);
+  z-index:40;
+}
+.nav-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  width:56px;padding:4px 0;color:var(--grey-soft);
+  transition:color .15s ease;
+}
+.nav-btn svg{width:22px;height:22px;}
+.nav-btn span{font-size:10px;font-weight:600;letter-spacing:.01em;}
+.nav-btn.active{color:var(--ink);}
+.nav-btn.active svg{stroke:var(--gold-dark);}
+.nav-btn.create-btn{
+  width:46px;height:46px;border-radius:16px;
+  background:linear-gradient(145deg,var(--gold),var(--gold-dark));
+  color:#fff;justify-content:center;margin-top:-22px;
+  box-shadow:0 10px 22px -8px rgba(184,86,10,.55);
+}
+.nav-btn.create-btn span{display:none;}
+.nav-btn.create-btn svg{width:24px;height:24px;}
+
+/* ============ BUTTONS / CHIPS (shared) ============ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 20px;border-radius:999px;font-weight:700;font-size:14.5px;
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.btn:active{transform:scale(.97);}
+.btn-gold{background:linear-gradient(145deg,var(--gold),var(--gold-dark));color:#fff;box-shadow:0 10px 22px -10px rgba(184,86,10,.6);}
+.btn-dark{background:var(--ink);color:#fff;}
+.btn-outline{background:transparent;border:1.5px solid var(--line);color:var(--ink);}
+.btn-outline.on-dark{border-color:rgba(255,255,255,.3);color:#fff;}
+.btn-ghost{background:var(--beige-light);color:var(--ink);}
+.btn-sm{padding:9px 14px;font-size:13px;}
+.btn-block{width:100%;}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:var(--beige-light);font-size:12.5px;font-weight:600;color:var(--grey);white-space:nowrap;}
+.chip.active{background:var(--ink);color:#fff;}
+
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-card);}
+
+/* ============ ANIMATIONS GLOBALES ============ */
+@keyframes koraa-fade-up{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes koraa-pop{0%{opacity:0;transform:scale(.85);}70%{transform:scale(1.04);}100%{opacity:1;transform:scale(1);}}
+@keyframes koraa-pulse-ring{0%{box-shadow:0 0 0 0 rgba(182,68,55,.55);}70%{box-shadow:0 0 0 8px rgba(182,68,55,0);}100%{box-shadow:0 0 0 0 rgba(182,68,55,0);}}
+@keyframes koraa-shine{0%{background-position:-200% 0;}100%{background-position:200% 0;}}
+@keyframes koraa-bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
+@keyframes koraa-heart-burst{0%{transform:scale(.6);opacity:0;}45%{transform:scale(1.35);opacity:1;}100%{transform:scale(1);opacity:1;}}
+@keyframes koraa-spin-slow{to{transform:rotate(360deg);}}
+@keyframes koraa-count-in{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.shop-card,.product-card,.dash-row,.stat-tile,.badge-chip,.wizard-step,.campaign-card,.hashtag-pill,
+.creator-mini,.conv-row,.notif-row,.history-row,.settings-row,.content-tile,.create-opt{
+  animation:koraa-fade-up .38s cubic-bezier(.2,.7,.3,1) backwards;
+}
+.hscroll>*:nth-child(1),.product-grid>*:nth-child(1),.dash-list>*:nth-child(1),.content-grid>*:nth-child(1){animation-delay:.02s;}
+.hscroll>*:nth-child(2),.product-grid>*:nth-child(2),.dash-list>*:nth-child(2),.content-grid>*:nth-child(2){animation-delay:.06s;}
+.hscroll>*:nth-child(3),.product-grid>*:nth-child(3),.dash-list>*:nth-child(3),.content-grid>*:nth-child(3){animation-delay:.1s;}
+.hscroll>*:nth-child(4),.product-grid>*:nth-child(4),.dash-list>*:nth-child(4),.content-grid>*:nth-child(4){animation-delay:.14s;}
+.hscroll>*:nth-child(5),.product-grid>*:nth-child(5),.dash-list>*:nth-child(5),.content-grid>*:nth-child(5){animation-delay:.18s;}
+.hscroll>*:nth-child(n+6),.product-grid>*:nth-child(n+6),.dash-list>*:nth-child(n+6),.content-grid>*:nth-child(n+6){animation-delay:.2s;}
+.conv-row,.notif-row,.history-row,.settings-row{transition:background .15s ease;}
+.conv-row:active,.notif-row:active{background:var(--beige-light);}
+.pf-item,.profile-tab,.discover-tabs .chip,.chip-pick,.nav-btn{transition:transform .15s ease,color .15s ease,background .15s ease,border-color .15s ease;}
+.pf-item:active,.chip-pick:active{transform:scale(.94);}
+.profile-tab{transition:color .2s ease,border-color .2s ease;}
+#profile-body{animation:koraa-fade-up .3s ease backwards;}
+
+.feed-card{animation:koraa-pop .32s ease backwards;}
+.icon-btn .badge-dot{animation:koraa-pulse-ring 1.8s ease-out infinite;}
+.brand-dot{animation:koraa-pulse-ring 2.4s ease-out infinite;}
+.nav-btn.create-btn{animation:koraa-bob 2.6s ease-in-out infinite;}
+.nav-btn.create-btn:active{animation:none;}
+.fsa-btn .fsa-circle{transition:transform .18s cubic-bezier(.4,0,.2,1.6), background .18s ease;}
+.fsa-btn.liked .fsa-circle{animation:koraa-heart-burst .38s ease;}
+.k-mark{animation:koraa-fade-up .5s ease backwards;}
+.toast{animation:koraa-pop .28s ease;}
+.sheet{animation:koraa-fade-up .28s cubic-bezier(.2,.7,.3,1);}
+.mono-num,.st-val,.dr-val,.ssr-num,.pf-num{animation:koraa-count-in .3s ease backwards;}
+.spin-loader{display:inline-block;width:16px;height:16px;border-radius:50%;border:2px solid rgba(0,0,0,.12);border-top-color:var(--gold-dark);animation:koraa-spin-slow .7s linear infinite;}
+.live-badge-dot{width:7px;height:7px;border-radius:50%;background:#fff;display:inline-block;animation:koraa-pulse-ring 1.4s ease-out infinite;}
+@media (prefers-reduced-motion:reduce){.nav-btn.create-btn,.icon-btn .badge-dot,.brand-dot,.live-badge-dot{animation:none;}}
+
+/* ============ AUTH / ONBOARDING ============ */
+#view-auth{background:radial-gradient(120% 90% at 50% 0%,#FFF3E2,#FFCB93 70%,#F4903B);}
+.auth-wrap{flex:1;display:flex;flex-direction:column;padding:40px 26px 26px;overflow-y:auto;}
+.auth-logo{display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:26px;}
+.auth-logo .k-mark{
+  width:64px;height:64px;border-radius:20px;
+  background:linear-gradient(145deg,var(--ink),#3a2214);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Plus Jakarta Sans';font-weight:800;color:var(--gold);font-size:26px;
+  box-shadow:0 16px 30px -12px rgba(28,20,10,.5);
+}
+.auth-logo h1{font-size:27px;letter-spacing:.02em;}
+.auth-logo p{font-size:13px;color:var(--grey-soft);text-align:center;max-width:260px;}
+.auth-card{background:#fff;border-radius:var(--r-xl);padding:26px 22px;box-shadow:var(--sh-soft);}
+.auth-tabs{display:flex;background:var(--beige-light);border-radius:999px;padding:4px;margin-bottom:20px;}
+.auth-tab{flex:1;text-align:center;padding:10px 0;border-radius:999px;font-weight:700;font-size:13.5px;color:var(--grey-soft);}
+.auth-tab.active{background:var(--ink);color:#fff;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--grey-soft);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;}
+.field input,.field select,.field textarea{
+  width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:var(--r-md);
+  background:var(--beige-light);font-size:14.5px;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold);background:#fff;}
+.field-row{display:flex;gap:10px;}
+.field-row .field{flex:1;}
+.chip-select{display:flex;flex-wrap:wrap;gap:8px;}
+.chip-pick{padding:9px 14px;border-radius:999px;border:1.5px solid var(--line);font-size:13px;font-weight:600;color:var(--grey);}
+.chip-pick.picked{background:var(--gold-soft);border-color:var(--gold);color:var(--gold-dark);}
+.auth-step-dots{display:flex;gap:6px;justify-content:center;margin:16px 0 4px;}
+.auth-step-dots span{width:7px;height:7px;border-radius:50%;background:var(--line);}
+.auth-step-dots span.on{background:var(--gold);width:18px;border-radius:4px;}
+.auth-foot-link{text-align:center;font-size:13px;color:var(--grey-soft);margin-top:16px;}
+.auth-foot-link b{color:var(--gold-dark);}
+.auth-error{display:none;background:rgba(182,68,55,.1);color:var(--danger);border:1px solid rgba(182,68,55,.25);border-radius:var(--r-sm);padding:10px 12px;font-size:12.5px;font-weight:600;margin-bottom:12px;line-height:1.4;}
+.btn.is-loading{opacity:.75;pointer-events:none;position:relative;}
+.btn.is-loading::after{content:"";position:absolute;right:16px;top:50%;width:16px;height:16px;margin-top:-8px;border-radius:50%;border:2px solid rgba(255,255,255,.5);border-top-color:#fff;animation:btn-spin .6s linear infinite;}
+@keyframes btn-spin{to{transform:rotate(360deg);}}
+.consent-row{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:var(--grey-soft);margin:14px 0;}
+.consent-row input{margin-top:3px;width:16px;height:16px;accent-color:var(--gold-dark);flex:none;}
+
+/* ============ FEED ============ */
+#view-feed{background:var(--feed-bg);}
+.feed-scroll{
+  flex:1;overflow-y:auto;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;
+}
+.feed-scroll::-webkit-scrollbar{display:none;}
+.feed-topbar{
+  position:absolute;top:0;left:0;right:0;z-index:30;
+  display:flex;align-items:center;gap:12px;
+  padding:16px 16px 14px;
+  background:linear-gradient(180deg,rgba(0,0,0,.62),rgba(0,0,0,.18) 75%,transparent);
+}
+.feed-brand{display:flex;align-items:center;gap:7px;flex:none;}
+.feed-brand .fb-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px rgba(255,255,255,.16);}
+.feed-brand span{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;font-size:15px;color:#fff;letter-spacing:.03em;}
+.feed-tabs-group{display:flex;align-items:center;justify-content:center;gap:22px;flex:1;}
+.feed-tab{font-family:'Plus Jakarta Sans';font-weight:700;font-size:15px;color:rgba(255,255,255,.55);position:relative;padding:4px 0;transition:color .2s ease,transform .15s ease;}
+.feed-tab.active{color:#fff;}
+.feed-tab.active::after{content:"";position:absolute;left:0;right:0;bottom:-7px;height:2.5px;background:var(--gold);border-radius:2px;animation:koraa-fade-up .22s ease;}
+.feed-tab:active{transform:scale(.95);}
+.feed-topbar .tb-actions{margin-left:0;gap:9px;}
+.feed-topbar .icon-btn{width:36px;height:36px;}
+.feed-topbar .icon-btn:hover{background:rgba(255,255,255,.22);}
+.feed-card{
+  position:relative;height:100%;width:100%;scroll-snap-align:start;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  overflow:hidden;
+}
+.feed-media{position:absolute;inset:0;z-index:0;}
+.feed-media .fm-scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,16,12,.05) 0%, rgba(20,16,12,.15) 40%, rgba(15,12,9,.88) 100%);}
+.feed-media .fm-badge{
+  position:absolute;top:70px;left:18px;background:rgba(255,255,255,.14);backdrop-filter:blur(8px);
+  color:#fff;font-size:11px;font-weight:700;padding:6px 12px;border-radius:999px;letter-spacing:.03em;
+  display:flex;align-items:center;gap:6px;
+}
+.feed-body{position:relative;z-index:1;padding:0 84px 18px 18px;color:#fff;}
+.feed-shop-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.level-ring{
+  width:44px;height:44px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+  background:conic-gradient(var(--gold) calc(var(--lvl,70)*1%), rgba(255,255,255,.18) 0);padding:2.5px;
+}
+.level-ring .lr-inner{
+  width:100%;height:100%;border-radius:50%;background:#2a241d;display:flex;align-items:center;justify-content:center;
+  font-family:'Plus Jakarta Sans';font-weight:800;font-size:14px;color:#fff;
+}
+.feed-shop-row .fs-name{font-weight:700;font-size:14.5px;}
+.feed-shop-row .fs-shop{font-size:11.5px;color:rgba(255,255,255,.65);}
+.feed-follow-mini{margin-left:auto;padding:6px 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.55);font-size:12px;font-weight:700;}
+.feed-follow-mini.following{background:rgba(255,255,255,.18);border-color:transparent;}
+.feed-desc{font-size:13.5px;line-height:1.5;margin-bottom:8px;max-width:88%;}
+.feed-desc .tag{color:var(--gold);font-weight:700;}
+.feed-music{display:flex;align-items:center;gap:7px;font-size:12px;color:rgba(255,255,255,.75);margin-bottom:10px;}
+.feed-product-ribbon{
+  display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.94);border-radius:16px;padding:9px 12px;
+  max-width:92%;box-shadow:0 12px 26px -10px rgba(0,0,0,.5);
+}
+.fpr-thumb{width:42px;height:42px;border-radius:10px;flex:none;}
+.fpr-info{flex:1;min-width:0;}
+.fpr-info .fpr-name{font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fpr-price{display:flex;align-items:center;gap:6px;font-size:12.5px;}
+.fpr-price .now{font-weight:800;color:var(--gold-dark);}
+.fpr-price .was{text-decoration:line-through;color:var(--grey-soft);font-size:11px;}
+.fpr-buy{background:var(--ink);color:#fff;font-size:12px;font-weight:700;padding:8px 14px;border-radius:999px;flex:none;}
+
+.feed-side-actions{
+  position:absolute;right:12px;bottom:88px;z-index:1;display:flex;flex-direction:column;align-items:center;gap:18px;
+}
+.fsa-btn{display:flex;flex-direction:column;align-items:center;gap:4px;color:#fff;}
+.fsa-btn .fsa-circle{
+  width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.14);backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;transition:transform .15s ease, background .15s ease;
+}
+.fsa-btn.liked .fsa-circle{background:rgba(197,58,58,.35);}
+.fsa-btn:active .fsa-circle{transform:scale(.88);}
+.fsa-btn span{font-size:11px;font-weight:700;}
+.fsa-avatar{width:46px;height:46px;border-radius:50%;border:2.5px solid var(--gold);position:relative;}
+.fsa-avatar .plus{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:18px;height:18px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:800;}
+
+/* ============ DISCOVER ============ */
+.search-bar{
+  display:flex;align-items:center;gap:10px;background:var(--beige-light);border-radius:999px;
+  padding:12px 16px;margin:0 18px 12px;color:var(--grey-soft);font-size:13.5px;
+}
+.discover-tabs{display:flex;gap:8px;padding:0 18px 14px;overflow-x:auto;flex:none;}
+.discover-tabs::-webkit-scrollbar{display:none;}
+.section-row{display:flex;align-items:baseline;justify-content:space-between;padding:0 18px 12px;}
+.section-row h3{font-size:16px;}
+.section-row .see-all{font-size:12.5px;font-weight:700;color:var(--gold-dark);}
+.hscroll{display:flex;gap:12px;padding:0 18px 22px;overflow-x:auto;}
+.hscroll::-webkit-scrollbar{display:none;}
+.shop-card{
+  flex:none;width:150px;border-radius:var(--r-lg);overflow:hidden;background:#fff;border:1px solid var(--line);box-shadow:var(--sh-card);
+}
+.shop-card .sc-cover{height:76px;position:relative;}
+.shop-card .sc-logo{
+  position:absolute;left:12px;bottom:-16px;width:38px;height:38px;border-radius:11px;background:#fff;border:2px solid #fff;
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-family:'Plus Jakarta Sans';font-size:15px;box-shadow:0 4px 10px rgba(0,0,0,.15);
+}
+.shop-card .sc-body{padding:22px 12px 14px;}
+.shop-card .sc-name{font-size:13.5px;font-weight:700;margin-bottom:2px;}
+.shop-card .sc-cat{font-size:11px;color:var(--grey-soft);margin-bottom:8px;}
+.sc-stats{display:flex;gap:10px;font-size:10.5px;color:var(--grey-soft);}
+.premium-tag{
+  position:absolute;top:8px;right:8px;background:rgba(28,20,10,.55);color:var(--gold);font-size:9.5px;font-weight:800;
+  padding:3px 8px;border-radius:999px;letter-spacing:.05em;backdrop-filter:blur(4px);
+}
+.creator-mini{flex:none;width:98px;text-align:center;}
+.creator-mini .cm-avatar{width:66px;height:66px;margin:0 auto 8px;}
+.creator-mini .cm-name{font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.creator-mini .cm-sub{font-size:10.5px;color:var(--grey-soft);}
+.product-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 18px 20px;}
+.product-card{border-radius:var(--r-lg);overflow:hidden;background:#fff;border:1px solid var(--line);box-shadow:var(--sh-card);}
+.product-card .pc-img{height:120px;position:relative;}
+.product-card .pc-fav{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;}
+.product-card .pc-body{padding:10px 12px 12px;}
+.product-card .pc-name{font-size:12.5px;font-weight:700;margin-bottom:4px;line-height:1.3;}
+.product-card .pc-shop{font-size:10.5px;color:var(--grey-soft);margin-bottom:6px;}
+.product-card .pc-price{font-size:14px;font-weight:800;color:var(--gold-dark);}
+.hashtag-pill{flex:none;padding:10px 16px;border-radius:14px;background:var(--ink);color:#fff;}
+.hashtag-pill .ht-name{font-size:13px;font-weight:700;}
+.hashtag-pill .ht-count{font-size:10.5px;color:rgba(255,255,255,.6);}
+
+/* ============ SHOP DETAIL ============ */
+.shop-hero{height:150px;position:relative;flex:none;}
+.shop-hero .sh-back{position:absolute;top:16px;left:16px;}
+.shop-hero .sh-actions{position:absolute;top:16px;right:16px;display:flex;gap:8px;}
+.shop-identity{padding:0 18px;margin-top:-34px;position:relative;z-index:2;}
+.shop-identity .si-logo{width:64px;height:64px;border-radius:18px;background:#fff;border:3px solid #fff;box-shadow:var(--sh-soft);display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans';font-weight:800;font-size:22px;}
+.shop-identity .si-name{font-size:19px;margin-top:10px;display:flex;align-items:center;gap:6px;}
+.shop-identity .si-cat{font-size:12.5px;color:var(--grey-soft);margin-top:2px;}
+.shop-identity .si-desc{font-size:13px;color:var(--grey);margin-top:8px;line-height:1.5;}
+.shop-stats-row{display:flex;gap:22px;padding:16px 18px;}
+.shop-stats-row .ssr-item{text-align:left;}
+.shop-stats-row .ssr-num{font-size:16px;}
+.shop-stats-row .ssr-label{font-size:11px;color:var(--grey-soft);}
+.shop-cta-row{display:flex;gap:10px;padding:4px 18px 16px;}
+.shop-cta-row .btn{flex:1;}
+.shop-cats{display:flex;gap:8px;padding:0 18px 14px;overflow-x:auto;}
+
+/* ============ CREATE / CREATOR HUB ============ */
+.creator-hero{
+  margin:0 18px 18px;padding:22px;border-radius:var(--r-xl);
+  background:linear-gradient(150deg,#1c1c1c,#3a332a 60%,var(--gold-dark));color:#fff;position:relative;overflow:hidden;
+}
+.creator-hero::after{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:rgba(232,119,13,.28);}
+.creator-hero h3{color:#fff;font-size:18px;margin-bottom:6px;}
+.creator-hero p{font-size:12.5px;color:rgba(255,255,255,.75);max-width:80%;margin-bottom:16px;}
+.wizard-steps{display:flex;flex-direction:column;gap:10px;padding:0 18px 18px;}
+.wizard-step{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:13px 14px;}
+.wizard-step .ws-num{width:30px;height:30px;border-radius:50%;background:var(--beige-light);color:var(--gold-dark);font-weight:800;display:flex;align-items:center;justify-content:center;font-size:13px;flex:none;}
+.wizard-step.done .ws-num{background:var(--gold);color:#fff;}
+.wizard-step .ws-title{font-size:13.5px;font-weight:700;}
+.wizard-step .ws-sub{font-size:11.5px;color:var(--grey-soft);}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 18px 16px;}
+.stat-tile{background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:14px;}
+.stat-tile .st-icon{width:34px;height:34px;border-radius:10px;background:var(--beige-light);display:flex;align-items:center;justify-content:center;margin-bottom:8px;color:var(--gold-dark);}
+.stat-tile .st-val{font-size:19px;}
+.stat-tile .st-label{font-size:11px;color:var(--grey-soft);}
+.badge-row{display:flex;gap:10px;padding:0 18px 18px;overflow-x:auto;}
+.badge-chip{flex:none;width:76px;text-align:center;}
+.badge-chip .bc-icon{width:56px;height:56px;border-radius:16px;background:linear-gradient(150deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;margin:0 auto 6px;}
+.badge-chip.locked .bc-icon{background:var(--beige-light);color:var(--line);}
+.badge-chip .bc-label{font-size:10.5px;font-weight:700;}
+.affiliate-box{margin:0 18px 18px;padding:16px;border-radius:var(--r-lg);background:var(--beige-light);}
+.affiliate-box .ab-row{display:flex;align-items:center;gap:10px;background:#fff;border-radius:12px;padding:11px 13px;margin-top:10px;font-size:12.5px;color:var(--grey);border:1px solid var(--line);}
+.affiliate-box .ab-row b{color:var(--ink);word-break:break-all;}
+#qr-canvas-wrap{display:flex;justify-content:center;margin-top:14px;}
+#qr-canvas-wrap canvas,#qr-canvas-wrap img{border-radius:12px;background:#fff;padding:8px;border:1px solid var(--line);}
+
+/* ============ PUBLIER / CREATE OPTIONS SHEET ============ */
+.create-opt-grid{display:flex;flex-direction:column;gap:10px;}
+.create-opt{
+  display:flex;align-items:center;gap:14px;width:100%;padding:13px;
+  background:var(--beige-light);border:1.5px solid transparent;border-radius:var(--r-lg);
+  text-align:left;animation:koraa-fade-up .32s cubic-bezier(.2,.7,.3,1) backwards;
+  transition:transform .15s ease, background .15s ease, border-color .15s ease;
+}
+.create-opt:nth-child(1){animation-delay:.02s;}
+.create-opt:nth-child(2){animation-delay:.07s;}
+.create-opt:nth-child(3){animation-delay:.12s;}
+.create-opt:active{transform:scale(.97);background:#fff;border-color:var(--line);}
+.create-opt .co-icon{
+  width:48px;height:48px;border-radius:14px;flex:none;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 18px -10px rgba(28,20,10,.45);
+}
+.create-opt .co-text{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
+.create-opt .co-text b{font-size:14px;font-weight:700;color:var(--ink);}
+.create-opt .co-text span{font-size:12px;color:var(--grey-soft);line-height:1.35;}
+.create-opt .co-chev{flex:none;color:var(--grey-soft);transition:transform .15s ease;}
+.create-opt:active .co-chev{transform:translateX(2px);}
+
+/* ============ MESSAGES ============ */
+.conv-row{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);}
+.conv-row .cv-avatar{width:50px;height:50px;border-radius:16px;flex:none;display:flex;align-items:center;justify-content:center;font-family:'Plus Jakarta Sans';font-weight:800;color:#fff;font-size:17px;}
+.conv-row .cv-body{flex:1;min-width:0;}
+.conv-row .cv-top{display:flex;justify-content:space-between;gap:8px;}
+.conv-row .cv-name{font-size:14px;font-weight:700;}
+.conv-row .cv-time{font-size:11px;color:var(--grey-soft);}
+.conv-row .cv-preview{font-size:12.5px;color:var(--grey-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px;}
+.conv-row .cv-unread{width:9px;height:9px;border-radius:50%;background:var(--gold);flex:none;}
+.chat-scroll{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+.msg-bubble{max-width:76%;padding:11px 14px;border-radius:16px;font-size:13.5px;line-height:1.4;}
+.msg-bubble.mine{align-self:flex-end;background:var(--ink);color:#fff;border-bottom-right-radius:5px;}
+.msg-bubble.theirs{align-self:flex-start;background:var(--beige-light);color:var(--ink);border-bottom-left-radius:5px;}
+.chat-inputbar{flex:none;display:flex;gap:10px;align-items:center;padding:10px 14px calc(10px + var(--safe-bottom));border-top:1px solid var(--line);background:#fff;}
+.chat-inputbar input{flex:1;padding:11px 16px;border-radius:999px;background:var(--beige-light);border:1px solid var(--line);font-size:13.5px;}
+.chat-inputbar .send-btn{width:42px;height:42px;border-radius:50%;background:var(--gold-dark);color:#fff;display:flex;align-items:center;justify-content:center;flex:none;}
+
+/* ============ PROFILE ============ */
+.profile-hero{padding:8px 18px 18px;display:flex;flex-direction:column;align-items:center;text-align:center;}
+.profile-hero .ph-name{font-size:19px;margin-top:12px;}
+.profile-hero .ph-handle{font-size:12.5px;color:var(--grey-soft);}
+.profile-hero .ph-level{display:flex;align-items:center;gap:6px;background:var(--gold-soft);color:var(--gold-dark);font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:999px;margin-top:8px;}
+.profile-followrow{display:flex;gap:26px;margin-top:14px;}
+.profile-followrow .pf-item .pf-num{font-size:15px;}
+.profile-followrow .pf-item .pf-label{font-size:11px;color:var(--grey-soft);}
+.profile-tabs{display:flex;padding:0 14px;border-bottom:1px solid var(--line);overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.profile-tabs::-webkit-scrollbar{display:none;}
+.profile-tab{flex:none;white-space:nowrap;text-align:center;padding:12px 12px;font-size:12.5px;font-weight:700;color:var(--grey-soft);border-bottom:2.5px solid transparent;}
+.profile-tab.active{color:var(--ink);border-color:var(--gold);}
+.dash-list{padding:14px 18px;display:flex;flex-direction:column;gap:10px;}
+.dash-row{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:13px 14px;}
+.dash-row .dr-icon{width:36px;height:36px;border-radius:10px;background:var(--beige-light);color:var(--gold-dark);display:flex;align-items:center;justify-content:center;flex:none;}
+.dash-row .dr-label{font-size:13px;color:var(--grey);flex:1;}
+.dash-row .dr-val{font-size:14.5px;}
+.history-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);font-size:12.5px;}
+.history-row .hr-tag{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--beige-light);color:var(--grey-soft);}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);font-size:13.5px;}
+.content-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:0 3px 20px;}
+.content-tile{position:relative;aspect-ratio:3/4;border-radius:6px;overflow:hidden;animation:koraa-fade-up .32s cubic-bezier(.2,.7,.3,1) backwards;transition:transform .15s ease;}
+.content-tile:active{transform:scale(.96);}
+.content-tile .ct-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(0,0,0,.55) 100%);}
+.content-tile .ct-play{position:absolute;top:8px;right:8px;color:#fff;opacity:.9;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));}
+.content-tile .ct-stats{position:absolute;left:8px;bottom:7px;display:flex;align-items:center;gap:4px;color:#fff;font-size:11px;font-weight:700;}
+
+/* ============ NOTIFICATIONS / SPONSOR ============ */
+.notif-row{display:flex;gap:12px;padding:13px 18px;border-bottom:1px solid var(--line);}
+.notif-row .nr-icon{width:38px;height:38px;border-radius:50%;background:var(--beige-light);color:var(--gold-dark);display:flex;align-items:center;justify-content:center;flex:none;}
+.notif-row.unread{background:var(--gold-soft);}
+.notif-row .nr-text{font-size:13px;line-height:1.4;}
+.notif-row .nr-time{font-size:11px;color:var(--grey-soft);margin-top:2px;}
+.sponsor-mode-toggle{display:flex;background:var(--beige-light);border-radius:999px;padding:4px;margin:0 18px 16px;}
+.sponsor-mode-toggle button{flex:1;padding:10px 0;border-radius:999px;font-size:12.5px;font-weight:700;color:var(--grey-soft);}
+.sponsor-mode-toggle button.active{background:var(--ink);color:#fff;}
+.campaign-card{margin:0 18px 12px;padding:16px;border-radius:var(--r-lg);background:#fff;border:1px solid var(--line);}
+.campaign-card .cc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.campaign-card .cc-title{font-size:14.5px;font-weight:700;}
+.campaign-card .cc-status{font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:999px;}
+.campaign-card .cc-status.open{background:rgba(63,125,92,.14);color:var(--success);}
+.campaign-card .cc-status.review{background:var(--gold-soft);color:var(--gold-dark);}
+.campaign-card .cc-desc{font-size:12.5px;color:var(--grey-soft);line-height:1.5;margin-bottom:10px;}
+.campaign-card .cc-meta{display:flex;gap:16px;font-size:11.5px;color:var(--grey-soft);}
+
+/* ============ MODALS / SHEETS / TOAST ============ */
+.sheet-backdrop{position:absolute;inset:0;background:rgba(20,16,12,.5);z-index:100;display:flex;align-items:flex-end;}
+.sheet{width:100%;background:#fff;border-radius:24px 24px 0 0;max-height:82%;display:flex;flex-direction:column;animation:sheetUp .22s ease;}
+@keyframes sheetUp{from{transform:translateY(24px);opacity:.6;}to{transform:translateY(0);opacity:1;}}
+.sheet-handle{width:38px;height:4px;background:var(--line);border-radius:99px;margin:10px auto 4px;}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;padding:10px 18px 14px;border-bottom:1px solid var(--line);}
+.sheet-head h4{font-size:16px;}
+.sheet-body{flex:1;overflow-y:auto;padding:16px 18px;}
+.sheet-foot{padding:14px 18px calc(14px + var(--safe-bottom));border-top:1px solid var(--line);}
+.comment-item{display:flex;gap:10px;margin-bottom:16px;}
+.comment-item .ci-avatar{width:34px;height:34px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:12px;}
+.comment-item .ci-name{font-size:12.5px;font-weight:700;}
+.comment-item .ci-text{font-size:13px;color:var(--grey);margin-top:2px;}
+.comment-item .ci-time{font-size:10.5px;color:var(--grey-soft);margin-top:4px;}
+.share-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.share-opt{display:flex;flex-direction:column;align-items:center;gap:7px;font-size:11px;font-weight:600;color:var(--grey);}
+.share-opt .so-icon{width:52px;height:52px;border-radius:16px;background:var(--beige-light);display:flex;align-items:center;justify-content:center;color:var(--gold-dark);}
+.gift-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.gift-opt{border:1.5px solid var(--line);border-radius:14px;padding:14px 8px;text-align:center;}
+.gift-opt.selected{border-color:var(--gold);background:var(--gold-soft);}
+.gift-opt .go-icon{font-size:24px;margin-bottom:6px;}
+.gift-opt .go-price{font-size:11.5px;color:var(--grey-soft);font-weight:700;}
+.toast{
+  pointer-events:auto;background:rgba(28,20,10,.92);color:#fff;padding:11px 18px;border-radius:999px;font-size:12.5px;font-weight:600;
+  display:flex;align-items:center;gap:8px;box-shadow:var(--sh-soft);animation:toastIn .25s ease;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+.qty-badge{background:var(--gold);color:#fff;border-radius:999px;font-size:9.5px;font-weight:800;padding:2px 6px;}
+.empty-state{padding:60px 30px;text-align:center;color:var(--grey-soft);}
+.empty-state .es-icon{font-size:38px;margin-bottom:12px;}
+</style>
+</head>
+<body>
+<div id="koraa-root">
+  <div id="phone-frame">
+
+    <!-- ================= AUTH / ONBOARDING ================= -->
+    <section id="view-auth" class="view active"></section>
+
+    <!-- ================= APP SHELL (post-login) ================= -->
+    <div id="app-shell" class="hidden" style="position:absolute;inset:0;">
+
+      <section id="view-feed" class="view"></section>
+      <section id="view-discover" class="view"></section>
+      <section id="view-shop" class="view"></section>
+      <section id="view-create" class="view"></section>
+      <section id="view-messages" class="view"></section>
+      <section id="view-chat" class="view"></section>
+      <section id="view-profile" class="view"></section>
+      <section id="view-notifications" class="view"></section>
+      <section id="view-search" class="view"></section>
+      <section id="view-sponsor" class="view"></section>
+
+      <nav id="bottom-nav"></nav>
+      <div id="modal-root"></div>
+      <div id="toast-root" style="position:absolute;top:14px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:200;pointer-events:none;"></div>
+    </div>
+
+  </div>
+</div>
+
+<script id="koraa-app">
+/* =====================================================================
+   KORAA — Application front-end (prototype connecté à Orbit City / Orbit Back Office)
+   Stockage : localStorage — clé "koraa_db_v1"
+   ===================================================================== */
+"use strict";
+
+/* =====================================================================
+   API KORAA — connexion au vrai backend Python (FastAPI).
+   Remplace les données de démonstration : inscriptions, connexions,
+   achats et abonnés sont désormais réels et stockés côté serveur.
+   ===================================================================== */
+const API_BASE = window.KORAA_API_BASE || '';
+const TOKEN_KEY = 'koraa_token_v1';
+
+function getToken(){ return localStorage.getItem(TOKEN_KEY); }
+function setToken(tok){ if(tok) localStorage.setItem(TOKEN_KEY, tok); }
+function clearToken(){ localStorage.removeItem(TOKEN_KEY); }
+
+async function apiFetch(path, options={}){
+  const headers = Object.assign({'Content-Type':'application/json'}, options.headers||{});
+  const token = getToken();
+  if(token) headers['Authorization'] = 'Bearer '+token;
+  let res;
+  try{
+    res = await fetch(API_BASE+path, Object.assign({}, options, {headers}));
+  }catch(e){
+    throw new Error("Impossible de joindre le serveur KORAA. Vérifie ta connexion.");
+  }
+  let data = null;
+  try{ data = await res.json(); }catch(e){ /* pas de corps JSON (ex: 204) */ }
+  if(!res.ok){
+    let msg = `Erreur serveur (${res.status})`;
+    if(data && data.detail){ msg = typeof data.detail==='string' ? data.detail : JSON.stringify(data.detail); }
+    const err = new Error(msg);
+    err.status = res.status; err.data = data;
+    throw err;
+  }
+  return data;
+}
+
+const API = {
+  signup: (payload)=>apiFetch('/auth/signup', {method:'POST', body:JSON.stringify(payload)}),
+  resendOtp: (phone)=>apiFetch('/auth/resend-otp', {method:'POST', body:JSON.stringify({phone})}),
+  verifyPhone: (phone, code)=>apiFetch('/auth/verify-phone', {method:'POST', body:JSON.stringify({phone, code})}),
+  login: (identifier, password)=>apiFetch('/auth/login', {method:'POST', body:JSON.stringify({identifier, password})}),
+  me: ()=>apiFetch('/auth/me'),
+  listShops: ()=>apiFetch('/shops'),
+  listProducts: (shopId)=>apiFetch(`/shops/${shopId}/products`),
+  createOrder: (payload)=>apiFetch('/orders', {method:'POST', body:JSON.stringify(payload)}),
+  myOrders: ()=>apiFetch('/orders/me'),
+  followCreator: (id)=>apiFetch(`/creators/${id}/follow`, {method:'POST'}),
+  unfollowCreator: (id)=>apiFetch(`/creators/${id}/unfollow`, {method:'POST'}),
+  creatorProgress: ()=>apiFetch('/creators/me/progress'),
+  addPartnerShopApi: (shopId)=>apiFetch(`/creators/me/partner-shops/${shopId}`, {method:'POST'}),
+  createPost: (payload)=>apiFetch('/posts', {method:'POST', body:JSON.stringify(payload)}),
+  feed: ()=>apiFetch('/posts/feed'),
+  publicUser: (id)=>apiFetch(`/users/${id}/public`),
+};
+
+/* ---------------------------------------------------------------------
+   ICONES (SVG inline — aucune dépendance CDN, cf. approche Orbit)
+--------------------------------------------------------------------- */
+const ICONS = {
+  feed:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-2 7-7 7 7 2 2"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>',
+  compass:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  message:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 01-8.9 8.4 9.3 9.3 0 01-4-1L3 20l1.2-4.1A8.4 8.4 0 1121 11.5z"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.6-4 5-6 8-6s6.4 2 8 6"/></svg>',
+  bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>',
+  heart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-9.5-9C.8 7.3 3 4 6.5 4c2 0 3.4 1 5.5 3.2C14.1 5 15.5 4 17.5 4 21 4 23.2 7.3 21.5 11 19 15.6 12 20 12 20z"/></svg>',
+  heartFill:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20s-7-4.4-9.5-9C.8 7.3 3 4 6.5 4c2 0 3.4 1 5.5 3.2C14.1 5 15.5 4 17.5 4 21 4 23.2 7.3 21.5 11 19 15.6 12 20 12 20z"/></svg>',
+  comment:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 01-8.9 8.4 9.3 9.3 0 01-4-1L3 20l1.2-4.1A8.4 8.4 0 1121 11.5z"/></svg>',
+  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>',
+  gift:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="12" rx="1.5"/><path d="M3 9h18M12 9v12"/><path d="M12 9c-2 0-3.5-1.2-3.5-3S9 3 10.5 3 12 5 12 9zM12 9c2 0 3.5-1.2 3.5-3S15 3 13.5 3 12 5 12 9z"/></svg>',
+  bag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l1 12H5z"/><path d="M9 8a3 3 0 016 0"/></svg>',
+  chevLeft:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  chevRight:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.1 6.6 7.2.9-5.3 5 1.4 7.2L12 18.3 5.6 21.7 7 14.5l-5.3-5 7.2-.9z"/></svg>',
+  trophy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 01-8 0z"/><path d="M8 5H4v2a4 4 0 004 4M16 5h4v2a4 4 0 01-4 4"/><path d="M12 13v4M9 21h6M8 21c0-2 1.5-3 4-3s4 1 4 3"/></svg>',
+  wallet:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 14.5h2.5"/></svg>',
+  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c1.2-3.6 3.6-5.4 6.5-5.4s5.3 1.8 6.5 5.4"/><circle cx="17" cy="8.5" r="2.6"/><path d="M16 14.8c2.3.3 4 1.9 4.9 4.7"/></svg>',
+  video:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="14" height="12" rx="2"/><path d="M16.5 10l5-3v10l-5-3"/></svg>',
+  link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4.5 4.5 0 006.4 0l2-2a4.5 4.5 0 00-6.4-6.4l-1.1 1.1"/><path d="M14 10a4.5 4.5 0 00-6.4 0l-2 2a4.5 4.5 0 006.4 6.4l1.1-1.1"/></svg>',
+  qr:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3M20 14v3h-3M14 20h3"/></svg>',
+  settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.9 2.9l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.6V19a2 2 0 11-4 0v-.2a1.7 1.7 0 00-1-1.5 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.9-2.9l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.6-1H4a2 2 0 110-4h.2a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.9-2.9l.1.1a1.7 1.7 0 001.9.3H10a1.7 1.7 0 001-1.6V4a2 2 0 114 0v.2a1.7 1.7 0 001 1.6 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.9 2.9l-.1.1a1.7 1.7 0 00-.3 1.9V10a1.7 1.7 0 001.6 1h.2a2 2 0 110 4h-.2a1.7 1.7 0 00-1.6 1z"/></svg>',
+  logout:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>',
+  tag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 12.4L12.4 20.6a2 2 0 01-2.8 0l-7.2-7.2a2 2 0 010-2.8L10.6 2.4A2 2 0 0112 1.8L20.6 2a2 2 0 012 2z"/><circle cx="15.5" cy="7.5" r="1.2" fill="currentColor" stroke="none"/></svg>',
+  badge:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M9 14.5L7.5 22 12 19.5 16.5 22 15 14.5"/></svg>',
+  megaphone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4a1 1 0 001 1h2l5 4V5L6 9H4a1 1 0 00-1 1z"/><path d="M15 8a4 4 0 010 8M18 5a8 8 0 010 14"/></svg>',
+  building:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18"/><path d="M9 21v-4h6v4M8 7h1M15 7h1M8 11h1M15 11h1M8 15h1M15 15h1"/></svg>',
+  send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>',
+  play:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+  package:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5zM3 8v8l9 5 9-5V8M12 13v8"/></svg>',
+  camera:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',
+};
+function ic(name,size=20){ return `<span style="display:inline-flex;width:${size}px;height:${size}px" aria-hidden="true">${ICONS[name]||''}</span>`; }
+
+/* ---------------------------------------------------------------------
+   UTILS
+--------------------------------------------------------------------- */
+// Échappement HTML systématique pour tout texte saisi par un utilisateur
+// (commentaire, message de chat, nom affiché...) avant insertion dans du
+// innerHTML — protège contre les injections de code (XSS).
+function escapeHtml(str){
+  return String(str ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[c]));
+}
+function fmtFCFA(n){ return Math.round(n).toLocaleString('fr-FR').replace(/\u202f/g,' ') + ' F'; }
+function fmtCompact(n){
+  if(n>=1000000) return (n/1000000).toFixed(1).replace('.0','')+'M';
+  if(n>=1000) return (n/1000).toFixed(1).replace('.0','')+'k';
+  return String(n);
+}
+function uid(prefix){ return prefix+'_'+Math.random().toString(36).slice(2,9); }
+function initials(name){ return name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+function timeAgo(ts){
+  const s = Math.max(1, Math.floor((Date.now()-ts)/1000));
+  if(s<60) return 'à l’instant';
+  if(s<3600) return Math.floor(s/60)+' min';
+  if(s<86400) return Math.floor(s/3600)+' h';
+  return Math.floor(s/86400)+' j';
+}
+const GRADIENTS = [
+  'linear-gradient(150deg,#3a2e1f,#8a6a35)','linear-gradient(150deg,#2c3b2e,#5f8a63)',
+  'linear-gradient(150deg,#3a2222,#8a4a3d)','linear-gradient(150deg,#22303a,#3d6a8a)',
+  'linear-gradient(150deg,#332440,#6a4a8a)','linear-gradient(150deg,#403322,#8a6f3d)',
+  'linear-gradient(150deg,#1f3a37,#3d8a7a)','linear-gradient(150deg,#3a2a3a,#8a3d78)'
+];
+function gradFor(seed){ let h=0; for(const c of seed) h=(h*31+c.charCodeAt(0))>>>0; return GRADIENTS[h%GRADIENTS.length]; }
+
+/* ---------------------------------------------------------------------
+   SEED DATA — désactivée : plus aucune boutique/compte fictif au démarrage.
+   Les boutiques réelles seront ajoutées via la synchronisation avec Orbit.
+--------------------------------------------------------------------- */
+const SEED_SHOPS = [];
+
+const CREATOR_FIRSTNAMES = ['Aïcha','Kouassi','Mariam','Yao','Fatou','Serge','Aminata','David','Grace','Ibrahim','Nadège','Franck'];
+const CREATOR_LASTNAMES = ['Koné','N’Guessan','Traoré','Diabaté','Bamba','Kouadio','Ouattara','Yao','Cissé','Bah'];
+function buildCreators(n){
+  const list=[];
+  for(let i=0;i<n;i++){
+    const name = CREATOR_FIRSTNAMES[i%CREATOR_FIRSTNAMES.length]+' '+CREATOR_LASTNAMES[(i*3)%CREATOR_LASTNAMES.length];
+    const followers = 800 + Math.floor(Math.random()*42000);
+    const level = followers>30000?'Icône':followers>15000?'Étoile':followers>5000?'Influenceur':followers>1500?'Ambassadeur':'Débutant';
+    list.push({
+      id: uid('cr'), name, handle:'@'+name.toLowerCase().replace(/[’' ]/g,''),
+      followers, level, color: gradFor(name),
+      videos: 4+Math.floor(Math.random()*40),
+      sales: Math.floor(Math.random()*90),
+      revenue: Math.floor(Math.random()*450000),
+    });
+  }
+  return list.sort((a,b)=>b.followers-a.followers);
+}
+const SEED_CREATORS = buildCreators(0); // aucun compte créateur fictif au démarrage
+
+const POST_TEMPLATES = [
+  d=>`Je viens de tester ${d.p.name} chez ${d.s.name} 😍 verdict dans la vidéo !`,
+  d=>`Mon avis honnête sur ${d.p.name} — vous allez adorer.`,
+  d=>`${d.s.name} m'a envoyé ce produit, voici ce que j'en pense vraiment.`,
+  d=>`On a testé pour vous : ${d.p.name}. Lien direct dans la boutique !`,
+  d=>`Coup de cœur du mois chez ${d.s.name} 🔥 ${d.p.name}`,
+];
+function buildPosts(){
+  const posts=[];
+  SEED_SHOPS.forEach(s=>{
+    s.products.forEach((p,idx)=>{
+      const creator = SEED_CREATORS[Math.floor(Math.random()*SEED_CREATORS.length)];
+      const tmpl = POST_TEMPLATES[Math.floor(Math.random()*POST_TEMPLATES.length)];
+      posts.push({
+        id: uid('post'), shopId:s.id, productName:p.name, productPrice:p.price, productOld:p.oldPrice||null,
+        creatorId:creator.id, creatorName:creator.name, creatorLevel:creator.level,
+        desc: tmpl({p,s}), hashtags:['#'+s.name.replace(/\s/g,''),'#KORAA','#'+p.cat.replace(/\s/g,'')],
+        music: s.name+' • Son original', grad: gradFor(p.name+idx),
+        likes: 200+Math.floor(Math.random()*9800), comments: [], shares: Math.floor(Math.random()*400),
+        gifts: Math.floor(Math.random()*60), liked:false, saved:false,
+      });
+    });
+  });
+  // mélange
+  for(let i=posts.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [posts[i],posts[j]]=[posts[j],posts[i]]; }
+  return posts;
+}
+
+const SAMPLE_COMMENTS = [
+  "Trop bien, je commande direct 😍","Le prix est correct pour la qualité","Ça marche vraiment ?? tu confirmes ?",
+  "J'ai déjà testé, c'est top !","Livraison rapide chez toi ?","La couleur rend encore mieux en vrai",
+];
+
+/* ---------------------------------------------------------------------
+   BASE DE DONNEES (localStorage)
+--------------------------------------------------------------------- */
+const DB_KEY = 'koraa_db_v1';
+let DB = null;
+
+function freshDB(){
+  const posts = buildPosts();
+  posts.forEach(p=>{
+    const n = 1+Math.floor(Math.random()*4);
+    for(let i=0;i<n;i++){
+      const c = SEED_CREATORS[Math.floor(Math.random()*SEED_CREATORS.length)];
+      p.comments.push({id:uid('cm'), author:c.name, color:c.color, text:SAMPLE_COMMENTS[Math.floor(Math.random()*SAMPLE_COMMENTS.length)], ts:Date.now()-Math.floor(Math.random()*5e6)});
+    }
+  });
+  const sponsorCampaigns = []; // plus de campagnes fictives liées à de fausses boutiques
+  return {
+    version:1,
+    shops: JSON.parse(JSON.stringify(SEED_SHOPS)),
+    creators: SEED_CREATORS,
+    posts,
+    sponsorCampaigns,
+    orders: [], // commandes de toute la plateforme (toutes boutiques, tous acheteurs) — alimente aussi le Back Office ORBIT
+    usersById: {},  // comptes réels créés via inscription, conservés même après déconnexion
+    credentials: [], // identifiants de connexion : {userId, email, phone, passHash}
+    user: null, // utilisateur actuellement connecté (session courante), défini à l'inscription/connexion
+  };
+}
+
+// Anciens identifiants de boutiques/comptes de démonstration à purger des sauvegardes existantes
+const LEGACY_FAKE_SHOP_IDS = ['shop_goldchicken','shop_superlife','shop_ivoiredelices','shop_fendix','shop_abidjanmode','shop_technova'];
+
+function loadDB(){
+  try{
+    const raw = localStorage.getItem(DB_KEY);
+    if(raw) DB = JSON.parse(raw);
+    else DB = freshDB();
+  }catch(e){
+    // Donnée illisible (corruption, changement de format) : on la met de côté
+    // au lieu de l'écraser silencieusement, pour une éventuelle récupération,
+    // puis on repart sur une base saine plutôt que de bloquer l'application.
+    console.error('KORAA : données locales corrompues, réinitialisation sécurisée.', e);
+    try{ const raw = localStorage.getItem(DB_KEY); if(raw) localStorage.setItem(DB_KEY+'_corrompue_'+Date.now(), raw); }catch(e2){ /* quota plein, on ignore */ }
+    DB = freshDB();
+  }
+  if(!DB.sponsorCampaigns) DB.sponsorCampaigns = freshDB().sponsorCampaigns;
+  if(!Array.isArray(DB.orders)) DB.orders = [];
+  // Migration douce : anciennes sauvegardes (mode "connexion démo") sans registre de comptes.
+  if(!DB.usersById) DB.usersById = {};
+  if(!Array.isArray(DB.credentials)) DB.credentials = [];
+  Object.values(DB.usersById).forEach(u=>{ if(!Array.isArray(u.partners)) u.partners = []; });
+  if(DB.user && !DB.usersById[DB.user.id]){
+    DB.usersById[DB.user.id] = DB.user;
+  }
+  // Nettoyage définitif des boutiques/comptes fictifs (Gold Chicken, Superlife, etc.)
+  // encore présents dans une sauvegarde locale créée avant cette mise à jour.
+  if(!DB.demoDataCleared){
+    DB.shops = (DB.shops||[]).filter(s=>!LEGACY_FAKE_SHOP_IDS.includes(s.id));
+    DB.creators = []; // les comptes créateurs générés automatiquement ne sont pas de vrais comptes
+    DB.posts = (DB.posts||[]).filter(p=>!LEGACY_FAKE_SHOP_IDS.includes(p.shopId));
+    DB.sponsorCampaigns = (DB.sponsorCampaigns||[]).filter(c=>!LEGACY_FAKE_SHOP_IDS.includes(c.shopId));
+    Object.values(DB.usersById).forEach(u=>{
+      if(u.conversations) u.conversations = u.conversations.filter(c=>!LEGACY_FAKE_SHOP_IDS.includes(c.withId));
+      if(u.following){
+        u.following.shops = (u.following.shops||[]).filter(id=>!LEGACY_FAKE_SHOP_IDS.includes(id));
+      }
+      if(u.favorites){
+        u.favorites.shops = (u.favorites.shops||[]).filter(id=>!LEGACY_FAKE_SHOP_IDS.includes(id));
+      }
+    });
+    DB.demoDataCleared = true;
+    saveDB();
+  }
+}
+function saveDB(){ try{ localStorage.setItem(DB_KEY, JSON.stringify(DB)); }catch(e){ /* quota etc. */ } syncToOrbitBackoffice(); }
+
+/* ---------------------------------------------------------------------
+   PONT DE SYNCHRONISATION — KORAA -> ORBIT BACK OFFICE
+   ----------------------------------------------------------------------
+   KORAA et ORBIT sont deux prototypes distincts, mais tous deux simulent
+   leur "base de données" via localStorage. Pour donner à voir une vraie
+   boucle produit de bout en bout, KORAA écrit ici un résumé de ses
+   créateurs, campagnes sponsorisées et commandes dans la MÊME clé
+   localStorage que le site et le back-office ORBIT ("orbit_prototype_db"),
+   à condition que les 3 fichiers soient servis sur la même origine
+   (même domaine, ou ouverts depuis le même dossier via un petit serveur
+   local — l'isolement par onglet en file:// empêche ce partage).
+   Le back-office lit ensuite ce pont dans ses modules "Créateurs" et
+   "Sponsoring", et fusionne les commandes KORAA dans sa vue consolidée
+   "Commandes & clients finaux", sans qu'aucune donnée d'entreprise ORBIT
+   réelle (abonnements, facturation) ne soit jamais modifiée par KORAA.
+--------------------------------------------------------------------- */
+const ORBIT_SHARED_KEY = 'orbit_prototype_db';
+function syncToOrbitBackoffice(){
+  try{
+    const raw = localStorage.getItem(ORBIT_SHARED_KEY);
+    const shared = raw ? JSON.parse(raw) : {};
+    ['companies','activities','users','userActivities','clients','sales','expenses','suppliers','products','orders','deliveries','aiChats'].forEach(k=>{
+      if(!Array.isArray(shared[k])) shared[k] = [];
+    });
+
+    // Comptes réels KORAA (inscriptions) : toute création de compte doit apparaître côté ORBIT.
+    const koraaAccounts = Object.values(DB.usersById||{}).map(acc=>({
+      id:acc.id, name:acc.name, email:acc.email||'', phone:acc.phone||'', ville:acc.ville||'',
+      isCreator:!!acc.isCreator, level:acc.level, followers:acc.stats?.followers||0,
+      orders:acc.stats?.orders||0, spent:acc.stats?.spent||0, revenue:acc.stats?.revenue||0,
+      rewardsPoints:acc.stats?.rewardsPoints||0, vouchers:acc.vouchers||[],
+      joinedAt:acc.joinedAt, source:'koraa',
+    }));
+
+    // Historique complet des échanges (chat client ↔ boutique) pour le suivi ORBIT.
+    const koraaChats = [];
+    Object.values(DB.usersById||{}).forEach(acc=>{
+      (acc.conversations||[]).forEach(conv=>{
+        (conv.messages||[]).forEach(m=>{
+          koraaChats.push({
+            id:m.id, convId:conv.id, shopId:conv.withId, shopName:conv.withName,
+            userId:acc.id, userName:acc.name, fromUser:!!m.mine, fromAI:!!m.fromAI,
+            text:m.text, ts:m.ts, source:'koraa',
+          });
+        });
+      });
+    });
+
+    // Dépenses (achats) de chaque utilisateur KORAA, pour le suivi financier consolidé ORBIT.
+    const koraaUserSpending = (DB.orders||[]).map(o=>({
+      id:o.id, userId:o.buyerId, userName:o.buyerName, shopId:o.shopId, shopName:o.shopName,
+      productName:o.productName, amount:o.price, payment:o.payment, createdAt:o.createdAt, source:'koraa',
+    }));
+
+    // Créateurs & campagnes sponsoring, pour les modules Back Office dédiés
+    shared.koraaBridge = {
+      updatedAt: Date.now(),
+      shops: DB.shops.map(s=>({ id:s.id, name:s.name, cat:s.cat, followers:s.followers, rating:s.rating, productsCount:s.products.length })),
+      creators: DB.creators.map(c=>({ id:c.id, name:c.name, followers:c.followers||0, sales:c.sales||0, revenue:c.revenue||0 })),
+      sponsorCampaigns: (DB.sponsorCampaigns||[]).map(c=>{
+        const shop = DB.shops.find(s=>s.id===c.shopId);
+        return { id:c.id, title:c.title, desc:c.desc, status:c.status, budget:c.budget, slots:c.slots, applied:c.applied, shopName: shop ? shop.name : '—' };
+      }),
+      accounts: koraaAccounts,
+      chats: koraaChats,
+      userSpending: koraaUserSpending,
+    };
+
+    // Commandes KORAA fusionnées dans la table "orders" partagée avec ORBIT.
+    // On les marque source:'koraa' et on embarque directement les infos
+    // d'affichage (boutique, acheteur) : la vue back-office s'en sert en
+    // repli quand aucune fiche entreprise/client ORBIT ne correspond,
+    // ce qui évite de créer de fausses "entreprises clientes" ORBIT.
+    const others = shared.orders.filter(o=>o.source!=='koraa');
+    const koraaOrders = (DB.orders||[]).map(o=>{
+      const liveStage = o.cancelled ? o.stage : koraaOrderStage(o);
+      return {
+        id:o.id, source:'koraa',
+        shopName:o.shopName, productName:o.productName, buyerName:o.buyerName, buyerPhone:o.buyerPhone,
+        creatorName:o.creatorName, commission:o.commission,
+        total:o.price, qty:1, status:o.status, stage:liveStage,
+        returned:!!o.returned, cancelled:!!o.cancelled, createdAt:o.createdAt,
+      };
+    });
+    shared.orders = others.concat(koraaOrders);
+
+    localStorage.setItem(ORBIT_SHARED_KEY, JSON.stringify(shared));
+  }catch(e){ /* stockage indisponible, quota, ou origine différente : on ignore silencieusement */ }
+}
+
+function defaultUser(profile){
+  return {
+    id: uid('user'),
+    name: profile.name || 'Utilisateur KORAA',
+    email: profile.email || '',
+    phone: profile.phone || '',
+    ville: profile.ville || 'Abidjan',
+    commune: profile.commune || '',
+    profession: profile.profession || '',
+    interests: profile.interests || [],
+    langue: profile.langue || 'Français',
+    handle: '@'+(profile.name||'user').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,16),
+    avatarColor: gradFor(profile.name||'KORAA'),
+    joinedAt: Date.now(),
+    level: 'Débutant',
+    levelProgress: 12,
+    isCreator: false,
+    referralCode: (profile.name||'KORAA').slice(0,3).toUpperCase()+Math.floor(1000+Math.random()*8999),
+    stats:{
+      orders:0, spent:0, revenue:0, commissions:0, videosPublished:0, salesDone:0,
+      followers:0, shopsFollowed:0, favProducts:0, ranking: 1200+Math.floor(Math.random()*800),
+      giftsReceived:0, rewardsPoints:50,
+    },
+    badges:['Bienvenue'],
+    following:{shops:[], creators:[]},
+    favorites:{products:[], shops:[], videos:[], creators:[]},
+    partners:[], // boutiques ajoutées comme partenaires affiliés (où le client a déjà acheté)
+    vouchers:[], // bons de réduction gagnés (programme de fidélité : 1 bon tous les 10 achats)
+    orders:[],
+    history:[
+      {label:'Compte KORAA créé', tag:'Bienvenue', ts:Date.now()},
+    ],
+    notifications:[
+      {id:uid('ntf'), icon:'badge', text:'Bienvenue sur KORAA ! Ton badge « Bienvenue » a été débloqué 🎉', ts:Date.now()-60000, read:false},
+      {id:uid('ntf'), icon:'compass', text:'Découvre les boutiques Premium synchronisées depuis Orbit City.', ts:Date.now()-120000, read:false},
+    ],
+    conversations: buildDefaultConversations(),
+  };
+}
+
+function buildDefaultConversations(){
+  // Plus de conversations fictives avec de fausses boutiques au démarrage.
+  // Les conversations réelles se créeront quand l'utilisateur suit une vraie boutique synchronisée depuis Orbit.
+  return [];
+}
+
+/* ---------------------------------------------------------------------
+   ETAT APPLICATIF
+--------------------------------------------------------------------- */
+const S = {
+  view:'auth',
+  authMode:'login', // login | signup
+  signupStep:1,
+  signupData:{ interests:[] },
+  discoverTab:'shops',
+  activeShopId:null,
+  activeConvId:null,
+  sponsorMode:'creator', // creator | business
+  searchQuery:'',
+  profileTab:'dashboard',
+};
+
+function user(){ return DB.user; }
+
+function persistAndSave(){ saveDB(); }
+
+function toast(msg, iconName){
+  const root = document.getElementById('toast-root');
+  const el = document.createElement('div');
+  el.className='toast';
+  el.innerHTML = (iconName?ic(iconName,15):'') + `<span>${escapeHtml(msg)}</span>`;
+  root.appendChild(el);
+  setTimeout(()=>{ el.style.transition='opacity .3s ease'; el.style.opacity='0'; setTimeout(()=>el.remove(),320); }, 2400);
+}
+
+/* ---------------------------------------------------------------------
+   NAVIGATION
+--------------------------------------------------------------------- */
+function navItems(){
+  return [
+    {id:'feed', label:t('feed'), icon:'feed'},
+    {id:'discover', label:t('discover'), icon:'compass'},
+    {id:'create', label:t('create'), icon:'plus', isCreate:true},
+    {id:'messages', label:t('messages'), icon:'message'},
+    {id:'profile', label:t('profile'), icon:'user'},
+  ];
+}
+function renderBottomNav(){
+  const nav = document.getElementById('bottom-nav');
+  const NAV_ITEMS = navItems();
+  nav.innerHTML = NAV_ITEMS.map(item=>{
+    const active = S.view===item.id;
+    if(item.isCreate){
+      return `<button class="nav-btn create-btn" data-nav="${item.id}">${ic(item.icon,22)}<span>${item.label}</span></button>`;
+    }
+    return `<button class="nav-btn ${active?'active':''}" data-nav="${item.id}">${ic(item.icon,22)}<span>${item.label}</span></button>`;
+  }).join('');
+  nav.querySelectorAll('[data-nav]').forEach(btn=>{
+    btn.addEventListener('click', ()=> goTo(btn.dataset.nav));
+  });
+}
+
+const MAIN_VIEWS = ['feed','discover','create','messages','profile'];
+const RENDERERS = {}; // rempli plus bas par chaque module de vue
+
+function goTo(viewId, opts={}){
+  if(MAIN_VIEWS.includes(viewId)) S.lastMain = viewId;
+  S.view = viewId;
+  Object.assign(S, opts);
+  document.querySelectorAll('#app-shell > .view').forEach(v=>v.classList.remove('active'));
+  const target = document.getElementById('view-'+viewId);
+  if(target) target.classList.add('active');
+  const bottomNav = document.getElementById('bottom-nav');
+  bottomNav.style.display = MAIN_VIEWS.includes(viewId) ? 'flex' : 'none';
+  if(RENDERERS[viewId]) RENDERERS[viewId]();
+  if(MAIN_VIEWS.includes(viewId)) renderBottomNav();
+}
+
+function closeModal(){
+  const root = document.getElementById('modal-root');
+  root.innerHTML='';
+}
+function openSheet(html, opts={}){
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="sheet-backdrop" id="sheet-backdrop-el"><div class="sheet" style="${opts.maxHeight?`max-height:${opts.maxHeight}`:''}"><div class="sheet-handle"></div>${html}</div></div>`;
+  document.getElementById('sheet-backdrop-el').addEventListener('click', (e)=>{ if(e.target.id==='sheet-backdrop-el') closeModal(); });
+}
+
+/* =====================================================================
+   VUE : AUTH / ONBOARDING
+   ===================================================================== */
+const INTEREST_OPTIONS = ['Mode','Beauté','Alimentation','Bien-être','Sport','Tech','Maison','Cérémonie'];
+const LANG_OPTIONS = ['Français','Anglais','Espagnol','Dioula','Baoulé'];
+
+/* ---------------------------------------------------------------------
+   INTERNATIONALISATION (i18n) — l'app s'adapte à la langue du compte.
+   Chaque langue peut avoir ses propres mots pour les mêmes rubriques
+   (ex : le "feed" s'appelle "Actualité" en français, "Feed" en anglais,
+   "Novedades" en espagnol) sans changer la structure de l'app.
+--------------------------------------------------------------------- */
+const I18N = {
+  'Français': { feed:'Actualité', feedFollowing:'Abonnements', feedForYou:'Pour toi', discover:'Boutique', create:'Créer', messages:'Messages', profile:'Profil', partners:'Partenaires' },
+  'Anglais':  { feed:'Feed', feedFollowing:'Following', feedForYou:'For You', discover:'Shop', create:'Create', messages:'Messages', profile:'Profile', partners:'Partners' },
+  'Espagnol': { feed:'Novedades', feedFollowing:'Siguiendo', feedForYou:'Para ti', discover:'Tienda', create:'Crear', messages:'Mensajes', profile:'Perfil', partners:'Socios' },
+  'Dioula':   { feed:'Actualité', feedFollowing:'Abonnements', feedForYou:'Pour toi', discover:'Boutique', create:'Créer', messages:'Messages', profile:'Profil', partners:'Partenaires' },
+  'Baoulé':   { feed:'Actualité', feedFollowing:'Abonnements', feedForYou:'Pour toi', discover:'Boutique', create:'Créer', messages:'Messages', profile:'Profil', partners:'Partenaires' },
+};
+function t(key){
+  const langue = (DB && DB.user && DB.user.langue) || 'Français';
+  const dict = I18N[langue] || I18N['Français'];
+  return dict[key] || I18N['Français'][key] || key;
+}
+
+/* ---------- Validation & comptes (mode lancement — plus de connexion démo) ----------
+   Règles alignées avec ORBIT pour une expérience cohérente entre les 3 apps. */
+function isValidEmail(value){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((value||'').trim()); }
+function isValidPhoneKoraa(value){ return /^[0-9+\s().-]{7,20}$/.test((value||'').trim()); }
+function normId(value){ return (value||'').trim().toLowerCase().replace(/[\s().-]/g,''); }
+// Hash simple côté client — suffisant pour ce prototype localStorage, mais
+// ne remplace pas une vraie authentification serveur (à mettre en place avant tout lancement réel).
+// ---------------------------------------------------------------------------
+// Sécurité — hachage des mots de passe (SHA-256 salé, Web Crypto) avec un sel
+// aléatoire propre à chaque compte, en remplacement de l'ancien hachage non
+// cryptographique à sel fixe partagé (vulnérable aux tables arc-en-ciel).
+// Les identifiants créés avant ce correctif (`passHash` sans `passSalt`) sont
+// migrés automatiquement vers le nouveau format dès la prochaine connexion
+// réussie.
+// ---------------------------------------------------------------------------
+function genSalt(){
+  return Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+async function hashPass(pwd, salt){
+  const data = new TextEncoder().encode(salt + ':' + pwd);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+// Ancien hachage (DJB2, sel fixe) conservé uniquement pour vérifier — puis
+// migrer — les comptes créés avant ce correctif.
+function legacyHashPass(pwd){
+  let h = 5381;
+  const s = 'koraa_salt_'+pwd;
+  for(let i=0;i<s.length;i++){ h = ((h*33) ^ s.charCodeAt(i)) >>> 0; }
+  return h.toString(36);
+}
+async function verifyCredential(cred, pwd){
+  if(cred.passSalt) return (await hashPass(pwd, cred.passSalt)) === cred.passHash;
+  return cred.passHash === legacyHashPass(pwd);
+}
+async function setCredentialPassword(cred, pwd){
+  cred.passSalt = genSalt();
+  cred.passHash = await hashPass(pwd, cred.passSalt);
+}
+
+/* ---------------------------------------------------------------------
+   PONT AUTH RÉEL (backend KORAA / FastAPI)
+   ----------------------------------------------------------------------
+   Le backend attend un numéro au format international (+225...). Ces
+   utilitaires convertissent les numéros locaux saisis par l'utilisateur
+   et fusionnent la fiche riche stockée localement (stats, badges, fil
+   d'actualité...) avec le compte réel renvoyé par l'API (id, compteurs
+   d'achats/abonnés, statut créateur), qui reste la source de vérité pour
+   ces derniers champs.
+--------------------------------------------------------------------- */
+function normalizePhoneCI(value){
+  let v = (value||'').trim().replace(/[\s().-]/g,'');
+  if(v.startsWith('+')) return v;
+  if(v.startsWith('00')) return '+'+v.slice(2);
+  if(v.startsWith('0')) v = v.slice(1);
+  return '+225'+v;
+}
+
+async function hydrateSessionFromApi(serverUser){
+  const localId = 'api_'+serverUser.id;
+  let profile = DB.usersById[localId];
+  if(!profile){
+    profile = defaultUser({ name: serverUser.name, email: serverUser.email, phone: serverUser.phone, ville:'Abidjan' });
+    profile.id = localId;
+  }
+  profile.apiId = serverUser.id;
+  profile.name = serverUser.name;
+  profile.email = serverUser.email;
+  profile.phone = serverUser.phone;
+  profile.phoneVerified = !!serverUser.phone_verified;
+  profile.isCreator = !!serverUser.is_creator;
+  profile.stats = profile.stats || {};
+  profile.stats.orders = serverUser.purchases_count;
+  profile.stats.followers = serverUser.followers_count;
+  DB.usersById[localId] = profile;
+  DB.user = profile;
+  persistAndSave();
+  return profile;
+}
+
+/* ---------------------------------------------------------------------
+   BOUTIQUES / PRODUITS RÉELS (backend KORAA)
+   ----------------------------------------------------------------------
+   Le catalogue n'est plus simulé (SEED_SHOPS est vide) : les boutiques et
+   produits réels sont chargés depuis l'API et adaptés à la forme attendue
+   par l'UI (cartes boutique/produit). `apiId` (identifiant numérique
+   serveur) est conservé sur chaque boutique/produit — c'est lui qui est
+   envoyé à `POST /orders`, jamais l'id local préfixé utilisé par l'UI.
+--------------------------------------------------------------------- */
+function mapApiProduct(p, shop){
+  return {
+    id: 'api_prod_'+p.id, apiId: p.id, shopId: shop.id, shopName: shop.name, shopColor: shop.color,
+    name: p.name, price: p.price, oldPrice: null, cat: shop.cat, img: p.image_url || null,
+  };
+}
+function mapApiShop(s){
+  return {
+    id: 'api_shop_'+s.id, apiId: s.id, name: s.name, cat: 'Boutique partenaire',
+    description: s.description || '', color: gradFor(s.name), rating: 4.8, followers: 0, products: [],
+  };
+}
+async function loadShopsFromApi(){
+  try{
+    const shops = await API.listShops();
+    const mapped = [];
+    for(const s of shops){
+      const local = mapApiShop(s);
+      try{
+        const products = await API.listProducts(s.id);
+        local.products = products.map(p=>mapApiProduct(p, local));
+      }catch(e){ /* boutique sans produits accessibles pour l'instant */ }
+      mapped.push(local);
+    }
+    DB.shops = mapped;
+    persistAndSave();
+    if(S.view==='discover' && RENDERERS.discover) RENDERERS.discover();
+  }catch(e){
+    // API injoignable ou pas encore de boutique créée côté serveur : on garde la liste vide plutôt que de planter.
+    console.error('KORAA : chargement des boutiques impossible.', e);
+  }
+}
+
+// Anti-brute-force : verrouille l'identifiant 60s après 5 échecs consécutifs.
+const LOGIN_MAX_ATTEMPTS = 5;
+const LOGIN_LOCK_MS = 60 * 1000;
+const loginAttempts = {};
+function loginLockStatus(id){
+  const a = loginAttempts[id];
+  if(!a) return { locked:false };
+  if(a.lockedUntil && a.lockedUntil > Date.now()) return { locked:true, secondsLeft: Math.ceil((a.lockedUntil - Date.now())/1000) };
+  if(a.lockedUntil && a.lockedUntil <= Date.now()) delete loginAttempts[id];
+  return { locked:false };
+}
+function registerLoginFailure(id){
+  const a = loginAttempts[id] || { count:0, lockedUntil:0 };
+  a.count += 1;
+  if(a.count >= LOGIN_MAX_ATTEMPTS){ a.lockedUntil = Date.now() + LOGIN_LOCK_MS; a.count = 0; }
+  loginAttempts[id] = a;
+}
+function registerLoginSuccess(id){ delete loginAttempts[id]; }
+function findCredential(idVal){
+  const n = normId(idVal);
+  return (DB.credentials||[]).find(c => (c.email && normId(c.email)===n) || (c.phone && normId(c.phone)===n));
+}
+function setAuthError(msg){
+  const box = document.getElementById('auth-error');
+  if(!box) return;
+  if(!msg){ box.style.display='none'; box.textContent=''; return; }
+  box.textContent = msg;
+  box.style.display = 'block';
+}
+
+function renderAuth(){
+  const el = document.getElementById('view-auth');
+  if(S.authMode==='login'){
+    el.innerHTML = `
+      <div class="auth-wrap">
+        <div class="auth-logo">
+          <div class="k-mark">K</div>
+          <h1>KORAA</h1>
+          <p>Le réseau social e-commerce d'Afrique. Découvre, achète, partage, gagne.</p>
+        </div>
+        <div class="auth-card">
+          <div class="auth-tabs">
+            <button class="auth-tab active" data-authtab="login">Connexion</button>
+            <button class="auth-tab" data-authtab="signup">Créer un compte</button>
+          </div>
+          <div class="auth-error" id="auth-error"></div>
+          <div class="field"><label>Email ou téléphone</label><input id="login-id" type="text" placeholder="ex : aicha@email.com"></div>
+          <div class="field"><label>Mot de passe</label><input id="login-pass" type="password" placeholder="••••••••"></div>
+          <button class="btn btn-gold btn-block" id="btn-login">Se connecter</button>
+          <p class="auth-foot-link">Pas encore de compte ? <b data-authtab="signup">Inscris-toi</b></p>
+        </div>
+      </div>`;
+    el.querySelectorAll('[data-authtab]').forEach(b=>b.addEventListener('click',()=>{ S.authMode=b.dataset.authtab; S.signupStep=1; renderAuth(); }));
+    document.getElementById('btn-login').addEventListener('click', doLogin);
+  } else {
+    renderSignupStep(el);
+  }
+}
+
+function doLogin(){
+  setAuthError(null);
+  const idVal = document.getElementById('login-id').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  if(!idVal || !pass){ setAuthError('Merci de renseigner ton email (ou téléphone) et ton mot de passe.'); return; }
+  if(idVal.includes('@') ? !isValidEmail(idVal) : !isValidPhoneKoraa(idVal)){
+    setAuthError('Identifiant invalide. Utilise un email ou un numéro de téléphone valide.'); return;
+  }
+  const lock = loginLockStatus(idVal);
+  if(lock.locked){ setAuthError(`Trop de tentatives. Réessaie dans ${lock.secondsLeft}s.`); return; }
+  const btn = document.getElementById('btn-login');
+  btn.classList.add('is-loading');
+  const identifier = idVal.includes('@') ? idVal : normalizePhoneCI(idVal);
+  API.login(identifier, pass).then(async (res)=>{
+    registerLoginSuccess(idVal);
+    setToken(res.access_token);
+    await hydrateSessionFromApi(res.user);
+    toast('Connexion réussie','check');
+    enterApp();
+  }).catch(err=>{
+    registerLoginFailure(idVal);
+    if(err.status===403){
+      // Compte existant mais numéro pas encore vérifié : on renvoie vers l'étape OTP.
+      setAuthError('Numéro non vérifié. Entre le code reçu par SMS pour activer ton compte.');
+      S.authMode='signup';
+      S.signupStep=4;
+      S.signupData = Object.assign({phoneNormalized: identifier, phone: idVal}, S.signupData||{});
+      API.resendOtp(identifier).catch(()=>{});
+      renderAuth();
+    } else if(err.status===401){
+      setAuthError('Identifiants incorrects. Vérifie ton email/téléphone et ton mot de passe.');
+    } else {
+      setAuthError(err.message || 'Connexion impossible. Réessaie.');
+    }
+  }).finally(()=>{ btn.classList.remove('is-loading'); });
+}
+
+function renderSignupStep(el){
+  const steps = 4;
+  const d = S.signupData;
+  let body='';
+  if(S.signupStep===1){
+    body = `
+      <div class="field-row">
+        <div class="field"><label>Nom</label><input id="su-lastname" value="${d.lastname||''}" placeholder="Koné"></div>
+        <div class="field"><label>Prénom</label><input id="su-firstname" value="${d.firstname||''}" placeholder="Aïcha"></div>
+      </div>
+      <div class="field"><label>Email</label><input id="su-email" type="email" value="${d.email||''}" placeholder="aicha@email.com"></div>
+      <div class="field"><label>Téléphone</label><input id="su-phone" type="tel" value="${d.phone||''}" placeholder="+225 07 00 00 00 00"></div>
+      <div class="field-row">
+        <div class="field"><label>Mot de passe</label><input id="su-pass" type="password" value="${d.pass||''}" placeholder="8 caractères min."></div>
+        <div class="field"><label>Confirmer</label><input id="su-pass2" type="password" value="${d.pass2||''}" placeholder="••••••••"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Date de naissance</label><input id="su-dob" type="date" value="${d.dob||''}"></div>
+        <div class="field"><label>Sexe</label>
+          <select id="su-sexe">
+            <option ${d.sexe==='F'?'selected':''} value="F">Femme</option>
+            <option ${d.sexe==='M'?'selected':''} value="M">Homme</option>
+            <option ${d.sexe==='autre'?'selected':''} value="autre">Autre</option>
+          </select>
+        </div>
+      </div>`;
+  } else if(S.signupStep===2){
+    body = `
+      <div class="field"><label>Profession</label><input id="su-profession" value="${d.profession||''}" placeholder="Étudiant, commerçant..."></div>
+      <div class="field-row">
+        <div class="field"><label>Ville</label><input id="su-ville" value="${d.ville||'Abidjan'}"></div>
+        <div class="field"><label>Commune</label><input id="su-commune" value="${d.commune||''}" placeholder="Cocody"></div>
+      </div>
+      <div class="field"><label>Adresse</label><input id="su-adresse" value="${d.adresse||''}" placeholder="Rue, quartier..."></div>
+      <div class="field"><label>Langue</label>
+        <select id="su-langue">${LANG_OPTIONS.map(l=>`<option ${d.langue===l?'selected':''}>${l}</option>`).join('')}</select>
+      </div>`;
+  } else if(S.signupStep===3){
+    body = `
+      <div class="field"><label>Centres d'intérêt</label>
+        <div class="chip-select" id="su-interests">
+          ${INTEREST_OPTIONS.map(i=>`<button type="button" class="chip-pick ${d.interests.includes(i)?'picked':''}" data-interest="${i}">${i}</button>`).join('')}
+        </div>
+      </div>
+      <label class="consent-row"><input type="checkbox" id="su-consent" ${d.consent?'checked':''}> J'accepte que mes données soient utilisées pour personnaliser mon expérience KORAA, conformément à la politique de confidentialité.</label>`;
+  } else {
+    body = `
+      <div class="field"><label>Code reçu par SMS</label><input id="su-otp" type="text" inputmode="numeric" maxlength="6" value="${d.otp||''}" placeholder="123456"></div>
+      <p style="font-size:13px;color:rgba(255,255,255,.6);margin:-4px 0 4px;">Un code à 6 chiffres a été envoyé au ${escapeHtml(d.phoneNormalized||d.phone||'')} (ou dans les logs du serveur en mode développement).</p>
+      <p class="auth-foot-link"><b id="su-resend-otp">Renvoyer le code</b></p>`;
+  }
+  el.innerHTML = `
+    <div class="auth-wrap">
+      <div class="auth-logo" style="margin-bottom:10px;">
+        <div class="k-mark" style="width:48px;height:48px;font-size:20px;">K</div>
+        <h1 style="font-size:21px;">Créer un compte</h1>
+      </div>
+      <div class="auth-card">
+        <div class="auth-step-dots">${Array.from({length:steps}).map((_,i)=>`<span class="${i+1<=S.signupStep?'on':''}"></span>`).join('')}</div>
+        <div class="auth-error" id="auth-error"></div>
+        ${body}
+        <div style="display:flex;gap:10px;margin-top:6px;">
+          ${S.signupStep>1 && S.signupStep<4?`<button class="btn btn-outline" id="su-back">Retour</button>`:''}
+          <button class="btn btn-gold btn-block" id="su-next">${S.signupStep===3?'Créer mon compte':(S.signupStep===4?'Vérifier mon numéro':'Continuer')}</button>
+        </div>
+        <p class="auth-foot-link">Déjà inscrit ? <b data-authtab="login">Se connecter</b></p>
+      </div>
+    </div>`;
+  el.querySelectorAll('[data-authtab]').forEach(b=>b.addEventListener('click',()=>{ S.authMode='login'; renderAuth(); }));
+  if(S.signupStep===3){
+    el.querySelectorAll('[data-interest]').forEach(chip=>chip.addEventListener('click',()=>{
+      const v = chip.dataset.interest;
+      const i = d.interests.indexOf(v);
+      if(i>-1) d.interests.splice(i,1); else d.interests.push(v);
+      chip.classList.toggle('picked');
+    }));
+  }
+  if(S.signupStep===4){
+    const resendEl = document.getElementById('su-resend-otp');
+    if(resendEl) resendEl.addEventListener('click', ()=>{
+      API.resendOtp(d.phoneNormalized).then(()=>toast('Nouveau code envoyé par SMS','check')).catch(err=>setAuthError(err.message||'Impossible de renvoyer le code.'));
+    });
+  }
+  if(S.signupStep>1 && S.signupStep<4) document.getElementById('su-back').addEventListener('click',()=>{ collectSignupStep(); setAuthError(null); S.signupStep--; renderSignupStep(el); });
+  document.getElementById('su-next').addEventListener('click',()=>{
+    collectSignupStep();
+    setAuthError(null);
+    if(S.signupStep===1){
+      if(!d.lastname || !d.firstname){ setAuthError('Merci de renseigner ton nom et ton prénom.'); return; }
+      if(!isValidEmail(d.email)){ setAuthError('Merci de saisir un email valide.'); return; }
+      if(!isValidPhoneKoraa(d.phone)){ setAuthError('Merci de saisir un numéro de téléphone valide.'); return; }
+      if(!d.pass || d.pass.length<8){ setAuthError('Le mot de passe doit contenir au moins 8 caractères.'); return; }
+      if(d.pass!==d.pass2){ setAuthError('Les deux mots de passe ne correspondent pas.'); return; }
+      S.signupStep++; renderSignupStep(el);
+      return;
+    }
+    if(S.signupStep===2){ S.signupStep++; renderSignupStep(el); return; }
+    if(S.signupStep===3){
+      // Étape 3 -> création réelle du compte côté serveur (API.signup), puis passage
+      // à l'étape 4 (vérification du numéro par code SMS) au lieu d'enregistrer
+      // directement en localStorage.
+      if(!d.consent){ setAuthError('Merci d’accepter la politique de confidentialité pour continuer.'); return; }
+      const btn = document.getElementById('su-next');
+      btn.classList.add('is-loading');
+      const fullname = `${d.firstname||'Nouvel'} ${d.lastname||'Utilisateur'}`.trim();
+      const phone = normalizePhoneCI(d.phone);
+      d.phoneNormalized = phone;
+      API.signup({ name: fullname, email: d.email, phone, password: d.pass })
+        .then(()=>{
+          toast('Compte créé — code envoyé par SMS','check');
+          S.signupStep = 4;
+          renderSignupStep(el);
+        })
+        .catch(err=>{
+          if(err.status===409) setAuthError('Un compte KORAA existe déjà avec cet email ou ce téléphone. Connecte-toi plutôt.');
+          else setAuthError(err.message || 'Inscription impossible. Réessaie.');
+        })
+        .finally(()=>btn.classList.remove('is-loading'));
+      return;
+    }
+    // Étape 4 : vérification du code OTP reçu par SMS -> obtention du token et connexion.
+    const code = (d.otp||'').trim();
+    if(!/^[0-9]{6}$/.test(code)){ setAuthError('Merci de saisir le code à 6 chiffres reçu par SMS.'); return; }
+    const btn = document.getElementById('su-next');
+    btn.classList.add('is-loading');
+    API.verifyPhone(d.phoneNormalized, code).then(async (res)=>{
+      setToken(res.access_token);
+      await hydrateSessionFromApi(res.user);
+      // Complète la fiche locale (profil riche) avec les infos saisies pendant l'inscription.
+      const u = DB.user;
+      u.ville = d.ville || u.ville; u.commune = d.commune || u.commune;
+      u.profession = d.profession || u.profession; u.interests = d.interests || u.interests;
+      u.langue = d.langue || u.langue;
+      persistAndSave();
+      toast('Numéro vérifié — bienvenue sur KORAA 🎉','check');
+      enterApp();
+    }).catch(err=>{
+      setAuthError(err.message || 'Code incorrect.');
+    }).finally(()=>btn.classList.remove('is-loading'));
+  });
+}
+function collectSignupStep(){
+  const d = S.signupData;
+  const g = id=>document.getElementById(id);
+  if(S.signupStep===1){
+    if(g('su-lastname')) d.lastname=g('su-lastname').value;
+    if(g('su-firstname')) d.firstname=g('su-firstname').value;
+    if(g('su-email')) d.email=g('su-email').value;
+    if(g('su-phone')) d.phone=g('su-phone').value;
+    if(g('su-pass')) d.pass=g('su-pass').value;
+    if(g('su-pass2')) d.pass2=g('su-pass2').value;
+    if(g('su-dob')) d.dob=g('su-dob').value;
+    if(g('su-sexe')) d.sexe=g('su-sexe').value;
+  } else if(S.signupStep===2){
+    if(g('su-profession')) d.profession=g('su-profession').value;
+    if(g('su-ville')) d.ville=g('su-ville').value;
+    if(g('su-commune')) d.commune=g('su-commune').value;
+    if(g('su-adresse')) d.adresse=g('su-adresse').value;
+    if(g('su-langue')) d.langue=g('su-langue').value;
+  } else if(S.signupStep===3){
+    if(g('su-consent')) d.consent=g('su-consent').checked;
+  } else if(S.signupStep===4){
+    if(g('su-otp')) d.otp=g('su-otp').value;
+  }
+}
+
+function enterApp(){
+  document.getElementById('view-auth').classList.remove('active');
+  document.getElementById('app-shell').classList.remove('hidden');
+  goTo('feed');
+  startLiveSimulation();
+  loadShopsFromApi();
+}
+
+/* =====================================================================
+   VUE : FEED
+   ===================================================================== */
+S.feedTab = 'pourtoi';
+function shopOf(id){ return DB.shops.find(s=>s.id===id); }
+function creatorOf(id){ return DB.creators.find(c=>c.id===id) || (user() && user().id===id ? {id:user().id,name:user().name,level:user().level} : null); }
+function levelPct(level){ return {'Débutant':20,'Ambassadeur':40,'Influenceur':65,'Étoile':85,'Icône':100}[level] || 20; }
+
+function feedPostList(){
+  let list = DB.posts;
+  if(S.feedTab==='abonnements'){
+    const u = user();
+    list = list.filter(p => u.following.shops.includes(p.shopId) || u.following.creators.includes(p.creatorId) || p.creatorId===u.id);
+  }
+  return list;
+}
+
+function renderFeed(){
+  const el = document.getElementById('view-feed');
+  const list = feedPostList();
+  el.innerHTML = `
+    <div class="feed-topbar">
+      <div class="feed-brand"><span class="fb-dot"></span><span>KORAA</span></div>
+      <div class="feed-tabs-group">
+        <button class="feed-tab ${S.feedTab==='abonnements'?'active':''}" data-feedtab="abonnements">${t('feedFollowing')}</button>
+        <button class="feed-tab ${S.feedTab==='pourtoi'?'active':''}" data-feedtab="pourtoi">${t('feedForYou')}</button>
+      </div>
+      <div class="tb-actions">
+        <button class="icon-btn on-dark" id="feed-search-btn">${ic('search',18)}</button>
+        <button class="icon-btn on-dark" id="feed-bell-btn">${ic('bell',18)}${unreadNotifCount()>0?'<span class="badge-dot"></span>':''}</button>
+      </div>
+    </div>
+    <div class="feed-scroll" id="feed-scroll">
+      ${list.length? list.map(p=>feedCardHTML(p)).join('') : `<div class="feed-card" style="align-items:center;justify-content:center;color:#fff;"><div class="empty-state" style="color:rgba(255,255,255,.6)">${ic('users',34)}<p style="margin-top:10px;">Suis des boutiques ou créateurs<br>pour remplir cet onglet.</p></div></div>`}
+    </div>`;
+  el.querySelectorAll('[data-feedtab]').forEach(b=>b.addEventListener('click',()=>{ S.feedTab=b.dataset.feedtab; renderFeed(); }));
+  document.getElementById('feed-search-btn').addEventListener('click',()=>goTo('search'));
+  document.getElementById('feed-bell-btn').addEventListener('click',()=>goTo('notifications'));
+  wireFeedCardEvents(el);
+}
+
+function feedCardHTML(p){
+  const s = shopOf(p.shopId);
+  const u = user();
+  const followingCreator = u.following.creators.includes(p.creatorId) || p.creatorId===u.id;
+  const lvl = levelPct(p.creatorLevel||'Débutant');
+  return `
+  <div class="feed-card" data-postid="${p.id}">
+    <div class="feed-media" style="background:${p.grad}">
+      ${p.videoBlobUrl?`<video src="${p.videoBlobUrl}" muted loop playsinline autoplay style="width:100%;height:100%;object-fit:cover;" class="feed-real-video"></video>`:''}
+      <div class="fm-scrim"></div>
+      <div class="fm-badge">${ic('play',13)} Vidéo</div>
+    </div>
+    <div class="feed-side-actions">
+      <button class="fsa-btn" data-act="shop" data-shop="${s.id}">
+        <span class="fsa-avatar" style="background:${gradFor(s.name)};display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Plus Jakarta Sans';font-weight:800;">${initials(s.name)}<span class="plus">${followingCreator?'✓':'+'}</span></span>
+      </button>
+      <button class="fsa-btn ${p.liked?'liked':''}" data-act="like">
+        <span class="fsa-circle">${ic(p.liked?'heartFill':'heart',22)}</span>
+        <span>${fmtCompact(p.likes)}</span>
+      </button>
+      <button class="fsa-btn" data-act="comment">
+        <span class="fsa-circle">${ic('comment',21)}</span>
+        <span>${fmtCompact(p.comments.length)}</span>
+      </button>
+      <button class="fsa-btn" data-act="share">
+        <span class="fsa-circle">${ic('share',20)}</span>
+        <span>${fmtCompact(p.shares)}</span>
+      </button>
+      <button class="fsa-btn" data-act="gift">
+        <span class="fsa-circle">${ic('gift',20)}</span>
+        <span>${fmtCompact(p.gifts)}</span>
+      </button>
+    </div>
+    <div class="feed-body">
+      <div class="feed-shop-row">
+        <div class="level-ring" style="--lvl:${lvl}"><div class="lr-inner">${initials(p.creatorName)}</div></div>
+        <div>
+          <div class="fs-name">${p.creatorName}</div>
+          <div class="fs-shop">${s.name} · ${p.creatorLevel||'Débutant'}</div>
+        </div>
+        <button class="feed-follow-mini ${followingCreator?'following':''}" data-act="follow">${followingCreator?'Suivi':'Suivre'}</button>
+      </div>
+      <div class="feed-desc">${p.desc.replace(/(#\w+)/g,'<span class="tag">$1</span>')} ${p.hashtags.map(h=>`<span class="tag">${h}</span>`).join(' ')}</div>
+      <div class="feed-music">${ic('video',14)} ${p.music}</div>
+      <div class="feed-product-ribbon" data-act="buy">
+        <div class="fpr-thumb" style="background:${s.color}"></div>
+        <div class="fpr-info">
+          <div class="fpr-name">${p.productName}</div>
+          <div class="fpr-price"><span class="now">${fmtFCFA(p.productPrice)}</span>${p.productOld?`<span class="was">${fmtFCFA(p.productOld)}</span>`:''}</div>
+        </div>
+        <div class="fpr-buy">Acheter</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function wireFeedCardEvents(root){
+  root.querySelectorAll('.feed-card[data-postid]').forEach(card=>{
+    const postId = card.dataset.postid;
+    const post = DB.posts.find(x=>x.id===postId);
+    card.querySelector('[data-act="like"]').addEventListener('click', (e)=>{
+      post.liked = !post.liked;
+      post.likes += post.liked?1:-1;
+      persistAndSave();
+      renderFeedCardInPlace(card, post);
+    });
+    card.querySelector('[data-act="follow"]').addEventListener('click', ()=>{
+      toggleFollowCreator(post.creatorId, post.creatorName);
+      renderFeedCardInPlace(card, post);
+    });
+    card.querySelector('[data-act="comment"]').addEventListener('click', ()=> openCommentsSheet(post));
+    card.querySelector('[data-act="share"]').addEventListener('click', ()=> openShareSheet(post));
+    card.querySelector('[data-act="gift"]').addEventListener('click', ()=> openGiftSheet(post));
+    card.querySelector('[data-act="buy"]').addEventListener('click', ()=> openBuySheet(post));
+    card.querySelector('[data-act="shop"]').addEventListener('click', ()=> { S.activeShopId=post.shopId; goTo('shop'); });
+  });
+}
+function renderFeedCardInPlace(card, post){
+  const s = shopOf(post.shopId);
+  const scrollTop = document.getElementById('feed-scroll').scrollTop;
+  card.outerHTML = feedCardHTML(post);
+  document.getElementById('feed-scroll').scrollTop = scrollTop;
+  wireFeedCardEvents(document.getElementById('view-feed'));
+}
+
+function toggleFollowCreator(creatorId, creatorName){
+  const u = user();
+  const i = u.following.creators.indexOf(creatorId);
+  if(i>-1){ u.following.creators.splice(i,1); toast('Tu ne suis plus '+creatorName); }
+  else { u.following.creators.push(creatorId); u.stats.ranking += 2; toast('Tu suis maintenant '+creatorName,'check'); addNotification('users', `Nouveau follow : ${creatorName}`); }
+  persistAndSave();
+}
+function toggleFollowShop(shopId){
+  const u = user(); const s = shopOf(shopId);
+  const i = u.following.shops.indexOf(shopId);
+  if(i>-1){ u.following.shops.splice(i,1); u.stats.shopsFollowed=Math.max(0,u.stats.shopsFollowed-1); toast('Boutique retirée des suivis'); }
+  else { u.following.shops.push(shopId); u.stats.shopsFollowed++; toast('Tu suis '+s.name,'check'); }
+  persistAndSave();
+}
+
+function unreadNotifCount(){ return (user()?.notifications||[]).filter(n=>!n.read).length; }
+function addNotification(icon, text){
+  const u = user(); if(!u) return;
+  u.notifications.unshift({id:uid('ntf'), icon, text, ts:Date.now(), read:false});
+  persistAndSave();
+}
+
+/* ---------- Sheet : Commentaires ---------- */
+function openCommentsSheet(post){
+  openSheet(`
+    <div class="sheet-head"><h4>${post.comments.length} commentaires</h4><button class="icon-btn" id="sheet-close">${ic('plus',16)}</button></div>
+    <div class="sheet-body" id="comments-list"></div>
+    <div class="sheet-foot" style="display:flex;gap:10px;align-items:center;">
+      <input id="comment-input" placeholder="Ajouter un commentaire..." style="flex:1;padding:11px 16px;border-radius:999px;background:var(--beige-light);border:1px solid var(--line);font-size:13.5px;">
+      <button class="icon-btn" style="background:var(--gold-dark);color:#fff;" id="comment-send">${ic('send',17)}</button>
+    </div>`, {maxHeight:'78%'});
+  document.getElementById('sheet-close').style.transform='rotate(45deg)';
+  document.getElementById('sheet-close').addEventListener('click', closeModal);
+  function renderList(){
+    document.getElementById('comments-list').innerHTML = post.comments.slice().reverse().map(c=>`
+      <div class="comment-item">
+        <div class="ci-avatar" style="background:${c.color||gradFor(c.author)}">${initials(c.author)}</div>
+        <div><div class="ci-name">${escapeHtml(c.author)}</div><div class="ci-text">${escapeHtml(c.text)}</div><div class="ci-time">${timeAgo(c.ts)}</div></div>
+      </div>`).join('') || `<div class="empty-state">${ic('comment',30)}<p>Sois le premier à commenter</p></div>`;
+  }
+  renderList();
+  document.getElementById('comment-send').addEventListener('click', ()=>{
+    const input = document.getElementById('comment-input');
+    const val = input.value.trim(); if(!val) return;
+    const u = user();
+    post.comments.push({id:uid('cm'), author:u.name, color:u.avatarColor, text:val, ts:Date.now()});
+    input.value='';
+    persistAndSave();
+    renderList();
+    renderFeed();
+  });
+}
+
+/* ---------- Sheet : Partager ---------- */
+function openShareSheet(post){
+  const u = user();
+  const saved = u.favorites.videos.includes(post.id);
+  openSheet(`
+    <div class="sheet-head"><h4>Partager</h4></div>
+    <div class="sheet-body">
+      <div class="share-grid">
+        ${['WhatsApp','Messages','Copier le lien','Plus'].map(opt=>`<button class="share-opt" data-share="${opt}"><span class="so-icon">${ic('share',22)}</span>${opt}</button>`).join('')}
+      </div>
+      <div style="margin-top:22px;border-top:1px solid var(--line);padding-top:16px;">
+        <button class="btn btn-ghost btn-block" id="save-video-btn">${ic(saved?'heartFill':'heart',17)} ${saved?'Retiré des favoris':'Enregistrer dans mes favoris'}</button>
+      </div>
+    </div>`);
+  document.querySelectorAll('[data-share]').forEach(b=>b.addEventListener('click', ()=>{ post.shares++; persistAndSave(); toast('Partagé via '+b.dataset.share); closeModal(); renderFeed(); }));
+  document.getElementById('save-video-btn').addEventListener('click', ()=>{
+    const i = u.favorites.videos.indexOf(post.id);
+    if(i>-1){ u.favorites.videos.splice(i,1); toast('Retiré des favoris'); } else { u.favorites.videos.push(post.id); toast('Ajouté aux favoris','check'); }
+    persistAndSave(); closeModal();
+  });
+}
+
+/* ---------- Sheet : Cadeau ---------- */
+const GIFT_OPTIONS = [ {icon:'🌹',label:'Rose',price:100}, {icon:'⭐',label:'Étoile',price:500}, {icon:'👑',label:'Couronne',price:2000} ];
+function openGiftSheet(post){
+  let picked = GIFT_OPTIONS[0];
+  openSheet(`
+    <div class="sheet-head"><h4>Envoyer un cadeau à ${post.creatorName}</h4></div>
+    <div class="sheet-body">
+      <div class="gift-grid" id="gift-grid">
+        ${GIFT_OPTIONS.map((g,i)=>`<div class="gift-opt ${i===0?'selected':''}" data-gift="${i}"><div class="go-icon">${g.icon}</div><div>${g.label}</div><div class="go-price">${g.price} pts</div></div>`).join('')}
+      </div>
+    </div>
+    <div class="sheet-foot"><button class="btn btn-gold btn-block" id="gift-confirm">Envoyer le cadeau</button></div>`);
+  document.querySelectorAll('#gift-grid [data-gift]').forEach(elx=>elx.addEventListener('click',()=>{
+    document.querySelectorAll('#gift-grid [data-gift]').forEach(x=>x.classList.remove('selected'));
+    elx.classList.add('selected'); picked = GIFT_OPTIONS[elx.dataset.gift];
+  }));
+  document.getElementById('gift-confirm').addEventListener('click', ()=>{
+    post.gifts++;
+    const u = user();
+    u.stats.rewardsPoints = Math.max(0, u.stats.rewardsPoints - picked.price + 20); // petits points de fidélité en retour
+    const cr = DB.creators.find(c=>c.id===post.creatorId);
+    if(cr) cr.revenue += picked.price*5;
+    if(post.creatorId===u.id) u.stats.revenue += picked.price*5;
+    persistAndSave();
+    toast(`${picked.icon} Cadeau envoyé à ${post.creatorName} !`,'check');
+    closeModal();
+    renderFeed();
+  });
+}
+
+/* ---------- Sheet : Achat produit ---------- */
+const PAYMENT_METHODS = [
+  {id:'wave', label:'Wave'}, {id:'orange', label:'Orange Money'}, {id:'mtn', label:'MTN Money'}, {id:'especes', label:'Espèces à la livraison'},
+];
+function openBuySheet(post){
+  const s = shopOf(post.shopId);
+  const u = user();
+  let payMethod = PAYMENT_METHODS[0].id;
+  openSheet(`
+    <div class="sheet-head"><h4>Formulaire de commande</h4></div>
+    <div class="sheet-body">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;">
+        <div style="width:56px;height:56px;border-radius:14px;background:${s.color};flex:none;"></div>
+        <div>
+          <div style="font-weight:700;font-size:14.5px;">${post.productName}</div>
+          <div style="font-size:12px;color:var(--grey-soft);">${s.name}</div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Nom complet</label><input id="buy-name" value="${escapeHtml(u.name)}"></div>
+        <div class="field"><label>Téléphone</label><input id="buy-phone" value="${u.phone||''}"></div>
+      </div>
+      <div class="field"><label>Adresse de livraison</label><input id="buy-address" value="${u.commune?u.commune+', ':''}${u.ville||'Abidjan'}" placeholder="Quartier, ville..."></div>
+      <div class="field"><label>Moyen de paiement</label>
+        <div class="chip-select" id="buy-pay-methods">
+          ${PAYMENT_METHODS.map((m,i)=>`<button type="button" class="chip-pick ${i===0?'picked':''}" data-pay="${m.id}">${m.label}</button>`).join('')}
+        </div>
+      </div>
+      <div class="dash-row" style="margin-top:6px;margin-bottom:10px;"><div class="dr-icon">${ic('tag',18)}</div><div class="dr-label">Prix</div><div class="dr-val">${fmtFCFA(post.productPrice)}</div></div>
+      <div class="dash-row"><div class="dr-icon">${ic('bag',18)}</div><div class="dr-label">Livraison estimée</div><div class="dr-val">24–48h</div></div>
+    </div>
+    <div class="sheet-foot"><button class="btn btn-gold btn-block" id="confirm-buy">Payer ${fmtFCFA(post.productPrice)}</button></div>`, {maxHeight:'88%'});
+  document.querySelectorAll('#buy-pay-methods [data-pay]').forEach(chip=>chip.addEventListener('click',()=>{
+    document.querySelectorAll('#buy-pay-methods [data-pay]').forEach(x=>x.classList.remove('picked'));
+    chip.classList.add('picked'); payMethod = chip.dataset.pay;
+  }));
+  document.getElementById('confirm-buy').addEventListener('click', ()=>{
+    const buyName = document.getElementById('buy-name').value.trim() || u.name;
+    const buyPhone = document.getElementById('buy-phone').value.trim() || u.phone || '';
+    const buyAddress = document.getElementById('buy-address').value.trim();
+    const payLabel = PAYMENT_METHODS.find(m=>m.id===payMethod)?.label || 'Wave';
+    if(!s.apiId){
+      toast("Cette boutique n'est pas encore synchronisée avec le serveur — achat impossible pour l'instant.");
+      return;
+    }
+    const btn = document.getElementById('confirm-buy');
+    btn.classList.add('is-loading');
+    const cr = DB.creators.find(c=>c.id===post.creatorId);
+    const referredByCreatorId = (cr && cr.apiId) ? cr.apiId : (post.creatorId===u.id && u.apiId ? u.apiId : null);
+    // Source de vérité : la commande est créée côté serveur (POST /orders), qui fait
+    // aussi avancer le vrai compteur purchases_count utilisé pour le déblocage créateur.
+    API.createOrder({
+      shop_id: s.apiId,
+      product_id: post.productApiId || null,
+      amount: post.productPrice,
+      referred_by_creator_id: referredByCreatorId,
+    }).then(async (order)=>{
+      u.stats.orders++; u.stats.spent += post.productPrice;
+      checkLoyaltyMilestones(u);
+      u.orders.unshift({id:'srv_'+order.id, shopName:s.name, productName:post.productName, price:post.productPrice, ts:Date.now(), status:'Confirmée', payment:payLabel});
+      u.history.unshift({label:`Achat — ${post.productName} (${s.name}) · ${payLabel}`, tag:'Commande', ts:Date.now()});
+      // devient automatiquement partenaire de la boutique où l'achat vient d'être effectué
+      addPartnerShopSilently(s.id);
+      const commission = Math.round(post.productPrice*creatorCommissionRate((post.creatorId===u.id?u.stats.followers:cr?.followers)||0));
+      if(cr){ cr.revenue += commission; cr.sales++; }
+      if(post.creatorId===u.id){ u.stats.revenue += commission; u.stats.commissions += commission; u.stats.salesDone++; addNotification('wallet', `Nouvelle vente via ta vidéo « ${post.productName} » — commission ${fmtFCFA(commission)}`); }
+      // Commande globale plateforme (affichage riche local + pont Back Office ORBIT) —
+      // la commande réelle et le compteur d'achats vivent désormais côté serveur.
+      if(!Array.isArray(DB.orders)) DB.orders = [];
+      DB.orders.unshift({
+        id:'srv_'+order.id, shopId:s.id, shopName:s.name, productName:post.productName, price:post.productPrice,
+        buyerId:u.id, buyerName:buyName, buyerPhone:buyPhone, buyerAddress:buyAddress, payment:payLabel,
+        creatorId:post.creatorId, creatorName:post.creatorName,
+        commission, status:'attente', stage:'creee', returned:false, cancelled:false, createdAt:order.created_at,
+      });
+      persistAndSave();
+      // Rafraîchit les compteurs réels (achats/abonnés/statut créateur) et déclenche
+      // la notification de déblocage créateur si les deux seuils viennent d'être atteints.
+      try{
+        const wasCreator = u.isCreator;
+        const me = await API.me();
+        await hydrateSessionFromApi(me);
+        if(!wasCreator && DB.user.isCreator) addNotification('badge', 'Compte créateur débloqué — 10 achats + 500 abonnés atteints 🎉');
+      }catch(e){ /* pas bloquant pour l'achat déjà confirmé */ }
+      toast(`Commande confirmée ✅ — Paiement via ${payLabel}`,'check');
+      closeModal();
+      renderProfileIfActive();
+    }).catch(err=>{
+      toast(err.message || 'Achat impossible pour le moment.');
+    }).finally(()=>btn.classList.remove('is-loading'));
+  });
+}
+function addPartnerShopSilently(shopId){
+  const u = user();
+  if(!Array.isArray(u.partners)) u.partners=[];
+  if(!u.partners.includes(shopId)) u.partners.push(shopId);
+}
+function renderProfileIfActive(){ if(S.view==='profile' && RENDERERS.profile) RENDERERS.profile(); }
+
+/* ---------- Suivi de commande ---------- */
+const ORDER_STAGE_LABELS_K = { creee:'Commande confirmée', payee:'Paiement reçu', livraison:'En livraison', livree:'Livrée' };
+const ORDER_STAGE_ORDER_K = ['creee','payee','livraison','livree'];
+// Fait évoluer visuellement la commande dans le temps (simulation de démo) :
+// aucune vraie logistique derrière, mais donne une impression de suivi vivant.
+function koraaOrderStage(o){
+  if(o.cancelled) return 'annulee';
+  const mins = (Date.now() - new Date(o.createdAt).getTime()) / 60000;
+  if(mins < 2) return 'creee';
+  if(mins < 10) return 'payee';
+  if(mins < 45) return 'livraison';
+  return 'livree';
+}
+function openOrdersSheet(){
+  const u = user();
+  const orders = u.orders || [];
+  const bodyId = 'orders-sheet-body';
+  openSheet(`
+    <div class="sheet-head"><h4>Mes commandes</h4></div>
+    <div class="sheet-body" id="${bodyId}" style="max-height:60vh;overflow-y:auto;">
+      ${ordersSheetListHTML(orders, null)}
+    </div>`);
+  // Rafraîchit avec le statut réel renvoyé par le serveur (source de vérité),
+  // tout en gardant l'affichage riche local (nom produit/boutique, moyen de paiement).
+  API.myOrders().then(serverOrders=>{
+    const byId = {}; serverOrders.forEach(o=> byId['srv_'+o.id]=o);
+    const body = document.getElementById(bodyId);
+    if(body) body.innerHTML = ordersSheetListHTML(orders, byId);
+  }).catch(()=>{ /* hors-ligne ou serveur injoignable : on garde l'affichage local tel quel */ });
+}
+function ordersSheetListHTML(orders, serverById){
+  if(!orders.length) return `<div class="empty-state">${ic('bag',28)}<p>Aucune commande pour le moment.</p></div>`;
+  return orders.map(o=>{
+    const serverOrder = serverById ? serverById[o.id] : null;
+    const full = (DB.orders||[]).find(x=>x.id===o.id) || o;
+    let label, pct;
+    if(serverOrder){
+      const STATUS_LABELS = { confirmed:'Confirmée', pending:'En attente', cancelled:'Annulée' };
+      label = STATUS_LABELS[serverOrder.status] || serverOrder.status;
+      pct = serverOrder.status==='cancelled' ? 0 : (serverOrder.status==='confirmed' ? Math.round(((ORDER_STAGE_ORDER_K.indexOf(koraaOrderStage(full))+1)/ORDER_STAGE_ORDER_K.length)*100) : 15);
+    } else {
+      const stage = koraaOrderStage(full);
+      label = stage==='annulee' ? 'Annulée' : ORDER_STAGE_LABELS_K[stage];
+      pct = stage==='annulee' ? 0 : Math.round(((ORDER_STAGE_ORDER_K.indexOf(stage)+1)/ORDER_STAGE_ORDER_K.length)*100);
+    }
+    return `<div class="dash-row" style="flex-direction:column;align-items:stretch;gap:6px;padding:12px 0;">
+      <div style="display:flex;justify-content:space-between;"><b style="font-size:13.5px;">${o.productName}</b><span style="font-size:12px;color:var(--grey-soft);">${o.shopName}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--grey-soft);"><span>${fmtFCFA(o.price)}</span><span>${label}</span></div>
+      <div style="height:6px;border-radius:99px;background:var(--beige-light);overflow:hidden;"><div style="height:100%;width:${pct}%;background:var(--gold);border-radius:99px;"></div></div>
+    </div>`;
+  }).join('');
+}
+
+/* =====================================================================
+   VUE : DISCOVER
+   ===================================================================== */
+function allProducts(){
+  const list=[];
+  DB.shops.forEach(s=> s.products.forEach(p=> list.push({...p, shopId:s.id, shopName:s.name, shopColor:s.color})));
+  return list;
+}
+function topHashtags(){
+  const map={};
+  DB.posts.forEach(p=> p.hashtags.forEach(h=>{ map[h]=(map[h]||0)+1; }));
+  return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,10);
+}
+
+function renderDiscover(){
+  const el = document.getElementById('view-discover');
+  const tabs = [ {id:'shops',label:'Boutiques'}, {id:'creators',label:'Créateurs'}, {id:'products',label:'Produits'}, {id:'hashtags',label:'Hashtags'} ];
+  el.innerHTML = `
+    <div class="topbar"><div class="brand"><span class="brand-dot"></span>${t('discover')}</div>
+      <div class="tb-actions"><button class="icon-btn" id="disc-fav-btn">${ic('heart',17)}</button></div>
+    </div>
+    <button class="search-bar" id="disc-search-open" style="border:none;width:calc(100% - 36px);text-align:left;">${ic('search',17)}<span>Rechercher boutiques, créateurs, produits...</span></button>
+    <div class="discover-tabs">${tabs.map(t=>`<button class="chip ${S.discoverTab===t.id?'active':''}" data-disctab="${t.id}">${t.label}</button>`).join('')}</div>
+    <div class="view-scroll" id="discover-body"></div>`;
+  document.getElementById('disc-search-open').addEventListener('click', ()=>goTo('search'));
+  document.getElementById('disc-fav-btn').addEventListener('click', ()=>openFavoritesSheet());
+  el.querySelectorAll('[data-disctab]').forEach(b=>b.addEventListener('click',()=>{ S.discoverTab=b.dataset.disctab; renderDiscover(); }));
+  renderDiscoverBody();
+}
+
+function renderDiscoverBody(){
+  const body = document.getElementById('discover-body');
+  const u = user();
+  if(S.discoverTab==='shops'){
+    body.innerHTML = `
+      <div class="section-row"><h3>Boutiques Premium</h3><span class="see-all">${DB.shops.length} boutiques</span></div>
+      <div class="product-grid" style="grid-template-columns:1fr 1fr;">
+        ${DB.shops.map(s=>shopGridCardHTML(s)).join('')}
+      </div>`;
+  } else if(S.discoverTab==='creators'){
+    body.innerHTML = `
+      <div class="section-row"><h3>Classement des créateurs</h3><span class="see-all">🏆 Top 14</span></div>
+      <div class="dash-list">
+        ${DB.creators.map((c,i)=>creatorRowHTML(c,i)).join('')}
+      </div>`;
+  } else if(S.discoverTab==='products'){
+    body.innerHTML = `
+      <div class="section-row"><h3>Produits tendance</h3></div>
+      <div class="product-grid">${allProducts().slice(0,20).map(p=>productCardHTML(p)).join('')}</div>`;
+  } else {
+    body.innerHTML = `
+      <div class="section-row"><h3>Hashtags populaires</h3></div>
+      <div class="hscroll" style="flex-wrap:wrap;">${topHashtags().map(([h,c])=>`<div class="hashtag-pill"><div class="ht-name">${h}</div><div class="ht-count">${c} vidéos</div></div>`).join('')}</div>`;
+  }
+  body.querySelectorAll('[data-openshop]').forEach(cardEl=>cardEl.addEventListener('click',()=>{ S.activeShopId=cardEl.dataset.openshop; goTo('shop'); }));
+  body.querySelectorAll('[data-fav-product]').forEach(btn=>btn.addEventListener('click',(e)=>{ e.stopPropagation(); toggleFavProduct(btn.dataset.favProduct); renderDiscoverBody(); }));
+  body.querySelectorAll('[data-openprofile]').forEach(rowEl=>rowEl.addEventListener('click',()=>openCreatorProfileSheet(rowEl.dataset.openprofile)));
+}
+
+function shopGridCardHTML(s){
+  const u = user();
+  const following = u.following.shops.includes(s.id);
+  return `
+  <div class="shop-card" data-openshop="${s.id}" style="cursor:pointer;">
+    <div class="sc-cover" style="background:linear-gradient(135deg,${s.color},#1c1c1c)">
+      <div class="premium-tag">★ Premium</div>
+      <div class="sc-logo">${initials(s.name)}</div>
+    </div>
+    <div class="sc-body">
+      <div class="sc-name">${s.name}</div>
+      <div class="sc-cat">${s.cat}</div>
+      <div class="sc-stats"><span>${fmtCompact(s.followers)} abonnés</span><span>★ ${s.rating}</span></div>
+    </div>
+  </div>`;
+}
+function productCardHTML(p){
+  const u = user();
+  const fav = u.favorites.products.includes(p.shopId+'::'+p.name);
+  return `
+  <div class="product-card" data-openshop="${p.shopId}" style="cursor:pointer;">
+    <div class="pc-img" style="background:linear-gradient(135deg,${p.shopColor},#2a241d)">
+      <button class="pc-fav" data-fav-product="${p.shopId}::${p.name}">${ic(fav?'heartFill':'heart',15)}</button>
+    </div>
+    <div class="pc-body">
+      <div class="pc-name">${p.name}</div>
+      <div class="pc-shop">${p.shopName}</div>
+      <div class="pc-price">${fmtFCFA(p.price)}</div>
+    </div>
+  </div>`;
+}
+function toggleFavProduct(key){
+  const u = user();
+  const i = u.favorites.products.indexOf(key);
+  if(i>-1){ u.favorites.products.splice(i,1); u.stats.favProducts=Math.max(0,u.stats.favProducts-1); toast('Retiré des favoris'); }
+  else { u.favorites.products.push(key); u.stats.favProducts++; toast('Ajouté aux favoris','check'); }
+  persistAndSave();
+}
+function creatorRowHTML(c,i){
+  return `
+  <div class="dash-row" data-openprofile="${c.id}" style="cursor:pointer;">
+    <div style="width:22px;text-align:center;font-weight:800;color:${i<3?'var(--gold-dark)':'var(--grey-soft)'};">${i+1}</div>
+    <div class="level-ring" style="--lvl:${levelPct(c.level)};width:38px;height:38px;"><div class="lr-inner" style="width:100%;height:100%;background:${c.color};font-size:12px;">${initials(c.name)}</div></div>
+    <div style="flex:1;">
+      <div style="font-size:13.5px;font-weight:700;">${c.name}</div>
+      <div style="font-size:11px;color:var(--grey-soft);">${c.level} · ${fmtCompact(c.followers)} abonnés</div>
+    </div>
+    <div style="font-size:12px;font-weight:700;color:var(--gold-dark);">${fmtCompact(c.videos)} vids</div>
+  </div>`;
+}
+
+function openCreatorProfileSheet(creatorId){
+  const c = DB.creators.find(x=>x.id===creatorId) || (user()&&user().id===creatorId?user():null); if(!c) return;
+  const u = user();
+  const following = u.following.creators.includes(creatorId) || creatorId===u.id;
+  const favd = u.favorites.creators.includes(creatorId);
+  const creatorPosts = DB.posts.filter(p=>p.creatorId===creatorId);
+  let tab = 'stats';
+  openSheet(`
+    <div class="sheet-body" style="text-align:center;padding-top:6px;">
+      <div class="level-ring" style="--lvl:${levelPct(c.level)};width:78px;height:78px;margin:0 auto 12px;"><div class="lr-inner" style="width:100%;height:100%;background:${c.color||c.avatarColor};font-size:24px;">${initials(c.name)}</div></div>
+      <h3 style="font-size:18px;">${c.name}</h3>
+      <div style="font-size:12.5px;color:var(--grey-soft);margin-bottom:12px;">${c.handle||''} · ${c.level}</div>
+      <div style="display:flex;justify-content:center;gap:26px;margin-bottom:18px;">
+        <div><div style="font-size:16px;font-weight:800;">${fmtCompact(c.followers||(c.stats?c.stats.followers:0))}</div><div style="font-size:11px;color:var(--grey-soft);">Abonnés</div></div>
+        <div><div style="font-size:16px;font-weight:800;">${creatorPosts.length}</div><div style="font-size:11px;color:var(--grey-soft);">Vidéos</div></div>
+        <div><div style="font-size:16px;font-weight:800;">${c.sales||(c.stats?c.stats.salesDone:0)}</div><div style="font-size:11px;color:var(--grey-soft);">Ventes</div></div>
+      </div>
+      ${creatorId!==u.id?`<div style="display:flex;gap:10px;margin-bottom:16px;">
+        <button class="btn ${following?'btn-ghost':'btn-gold'} btn-block" id="cp-follow">${following?'Suivi ✓':'Suivre'}</button>
+        <button class="btn btn-outline" id="cp-fav">${ic(favd?'heartFill':'heart',16)}</button>
+      </div>`:'<div style="margin-bottom:6px;"></div>'}
+      <div class="discover-tabs" style="padding:0 0 12px;justify-content:center;">
+        <button class="chip ${tab==='stats'?'active':''}" data-cptab="stats">Aperçu</button>
+        <button class="chip ${tab==='content'?'active':''}" data-cptab="content">Contenu (${creatorPosts.length})</button>
+      </div>
+      <div id="cp-body" style="text-align:left;"></div>
+    </div>`, {maxHeight:'85%'});
+  function drawBody(){
+    const box = document.getElementById('cp-body');
+    if(tab==='stats'){
+      box.innerHTML = `<div class="dash-list" style="padding:0;">
+        <div class="dash-row"><div class="dr-icon">${ic('trophy',16)}</div><div class="dr-label">Niveau</div><div class="dr-val">${c.level}</div></div>
+        <div class="dash-row"><div class="dr-icon">${ic('video',16)}</div><div class="dr-label">Vidéos publiées</div><div class="dr-val">${creatorPosts.length}</div></div>
+      </div>`;
+    } else {
+      box.innerHTML = creatorPosts.length ? `<div class="dash-list" style="padding:0;">${creatorPosts.map(p=>`
+        <div class="dash-row" data-viewpost="${p.id}" style="cursor:pointer;">
+          <div class="dr-icon" style="background:${p.grad};color:#fff;">${ic('play',15)}</div>
+          <div class="dr-label">${p.productName}<br><span style="font-size:11px;color:var(--grey-soft);">${fmtCompact(p.likes)} likes · ${p.comments.length} commentaires</span></div>
+          <div class="dr-val">${fmtCompact(p.shares)} partages</div>
+        </div>`).join('')}</div>` : `<div class="empty-state">${ic('video',26)}<p>Ce compte n'a encore rien publié.</p></div>`;
+      box.querySelectorAll('[data-viewpost]').forEach(row=>row.addEventListener('click', ()=>{
+        closeModal(); S.feedTab='pourtoi'; goTo('feed');
+        setTimeout(()=>{ const card = document.querySelector(`.feed-card[data-postid="${row.dataset.viewpost}"]`); if(card) card.scrollIntoView(); }, 60);
+      }));
+    }
+  }
+  document.querySelectorAll('[data-cptab]').forEach(b=>b.addEventListener('click',()=>{
+    tab=b.dataset.cptab;
+    document.querySelectorAll('[data-cptab]').forEach(x=>x.classList.toggle('active', x===b));
+    drawBody();
+  }));
+  drawBody();
+  if(creatorId!==u.id){
+    document.getElementById('cp-follow').addEventListener('click', ()=>{ toggleFollowCreator(c.id, c.name); closeModal(); });
+    document.getElementById('cp-fav').addEventListener('click', ()=>{
+      const i = u.favorites.creators.indexOf(c.id);
+      if(i>-1){ u.favorites.creators.splice(i,1); } else { u.favorites.creators.push(c.id); }
+      persistAndSave(); closeModal(); toast('Favoris mis à jour','check');
+    });
+  }
+}
+
+/* =====================================================================
+   VUE : FICHE BOUTIQUE
+   ===================================================================== */
+function renderShop(){
+  const el = document.getElementById('view-shop');
+  const s = shopOf(S.activeShopId);
+  if(!s){ goTo('discover'); return; }
+  const u = user();
+  const following = u.following.shops.includes(s.id);
+  const favShop = u.favorites.shops.includes(s.id);
+  const cats = [...new Set(s.products.map(p=>p.cat))];
+  el.innerHTML = `
+    <div class="view-scroll">
+      <div class="shop-hero" style="background:linear-gradient(135deg,${s.color},#1c1c1c)">
+        <button class="icon-btn on-dark sh-back" id="shop-back">${ic('chevLeft',18)}</button>
+        <div class="sh-actions">
+          <button class="icon-btn on-dark" id="shop-fav">${ic(favShop?'heartFill':'heart',17)}</button>
+          <button class="icon-btn on-dark" id="shop-msg">${ic('message',16)}</button>
+        </div>
+      </div>
+      <div class="shop-identity">
+        <div class="si-logo" style="color:${s.color}">${initials(s.name)}</div>
+        <div class="si-name">${s.name} <span style="color:var(--gold-dark);font-size:12px;">★ ${s.rating}</span></div>
+        <div class="si-cat">${s.cat} · synchronisé depuis Orbit City</div>
+        <div class="si-desc">${s.desc}</div>
+      </div>
+      <div class="shop-stats-row">
+        <div class="ssr-item"><div class="ssr-num">${fmtCompact(s.followers)}</div><div class="ssr-label">Abonnés</div></div>
+        <div class="ssr-item"><div class="ssr-num">${s.products.length}</div><div class="ssr-label">Produits</div></div>
+        <div class="ssr-item"><div class="ssr-num">${DB.posts.filter(p=>p.shopId===s.id).length}</div><div class="ssr-label">Vidéos</div></div>
+      </div>
+      <div class="shop-cta-row">
+        <button class="btn ${following?'btn-ghost':'btn-gold'}" id="shop-follow">${following?'Suivi ✓':'Suivre la boutique'}</button>
+        <button class="btn btn-outline" id="shop-share">${ic('share',15)} Partager</button>
+      </div>
+      <div class="shop-cats">${cats.map(c=>`<span class="chip">${c}</span>`).join('')}</div>
+      <div class="section-row"><h3>Catalogue</h3></div>
+      <div class="product-grid">
+        ${s.products.map(p=>productCardHTML({...p, shopId:s.id, shopName:s.name, shopColor:s.color})).join('')}
+      </div>
+    </div>`;
+  document.getElementById('shop-back').addEventListener('click', ()=>goTo('discover'));
+  document.getElementById('shop-fav').addEventListener('click', ()=>{
+    const i = u.favorites.shops.indexOf(s.id);
+    if(i>-1) u.favorites.shops.splice(i,1); else u.favorites.shops.push(s.id);
+    persistAndSave(); renderShop();
+  });
+  document.getElementById('shop-msg').addEventListener('click', ()=> openConversationWithShop(s));
+  document.getElementById('shop-follow').addEventListener('click', ()=>{ toggleFollowShop(s.id); renderShop(); });
+  document.getElementById('shop-share').addEventListener('click', ()=>{ toast('Lien de la boutique copié','check'); });
+  document.querySelectorAll('#view-shop [data-openshop]').forEach(cardEl=>cardEl.addEventListener('click',(e)=>{ e.stopPropagation(); openProductDetailFromShop(s, cardEl); }));
+  document.querySelectorAll('#view-shop [data-fav-product]').forEach(btn=>btn.addEventListener('click',(e)=>{ e.stopPropagation(); toggleFavProduct(btn.dataset.favProduct); renderShop(); }));
+}
+function openProductDetailFromShop(s, cardEl){
+  const name = cardEl.querySelector('.pc-name').textContent;
+  const product = s.products.find(p=>p.name===name);
+  if(!product) return;
+  openSheet(`
+    <div class="sheet-body">
+      <div style="height:140px;border-radius:16px;background:linear-gradient(135deg,${s.color},#2a241d);margin-bottom:14px;"></div>
+      <h3 style="font-size:17px;margin-bottom:4px;">${product.name}</h3>
+      <div style="font-size:12.5px;color:var(--grey-soft);margin-bottom:10px;">${s.name} · ${product.cat}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+        <span style="font-size:20px;font-weight:800;color:var(--gold-dark);">${fmtFCFA(product.price)}</span>
+        ${product.oldPrice?`<span style="text-decoration:line-through;color:var(--grey-soft);font-size:13px;">${fmtFCFA(product.oldPrice)}</span>`:''}
+      </div>
+    </div>
+    <div class="sheet-foot" style="display:flex;gap:10px;">
+      <button class="btn btn-outline" id="pd-fav">${ic('heart',16)}</button>
+      <button class="btn btn-gold btn-block" id="pd-buy">Commander</button>
+    </div>`);
+  document.getElementById('pd-fav').addEventListener('click', ()=>{ toggleFavProduct(s.id+'::'+product.name); closeModal(); });
+  document.getElementById('pd-buy').addEventListener('click', ()=>{
+    const fakePost = {productName:product.name, productPrice:product.price, shopId:s.id, creatorId:'direct'};
+    closeModal();
+    openBuySheet(fakePost);
+  });
+}
+
+/* =====================================================================
+   VUE : MESSAGES
+   ===================================================================== */
+function renderMessages(){
+  const el = document.getElementById('view-messages');
+  const u = user();
+  const convs = u.conversations.slice().sort((a,b)=>b.lastTs-a.lastTs);
+  el.innerHTML = `
+    <div class="topbar"><div class="brand"><span class="brand-dot"></span>Messages</div></div>
+    <div class="view-scroll">
+      ${convs.length? convs.map(c=>convRowHTML(c)).join('') : `<div class="empty-state">${ic('message',32)}<p>Aucune conversation pour le moment.</p></div>`}
+    </div>`;
+  el.querySelectorAll('[data-openconv]').forEach(r=>r.addEventListener('click',()=>{ S.activeConvId=r.dataset.openconv; goTo('chat'); }));
+}
+function convRowHTML(c){
+  const last = c.messages[c.messages.length-1];
+  return `
+  <div class="conv-row" data-openconv="${c.id}" style="cursor:pointer;">
+    <div class="cv-avatar" style="background:${c.color}">${initials(c.withName)}</div>
+    <div class="cv-body">
+      <div class="cv-top"><span class="cv-name">${c.withName}</span><span class="cv-time">${timeAgo(c.lastTs)}</span></div>
+      <div class="cv-preview">${last?last.text:''}</div>
+    </div>
+    ${c.unread?'<span class="cv-unread"></span>':''}
+  </div>`;
+}
+function openConversationWithShop(shop){
+  const u = user();
+  let conv = u.conversations.find(c=>c.withId===shop.id);
+  if(!conv){
+    conv = {id:uid('conv'), type:'shop', withId:shop.id, withName:shop.name, color:gradFor(shop.name), lastTs:Date.now(), unread:0,
+      messages:[{id:uid('m'), mine:false, text:`Bonjour 👋 bienvenue chez ${shop.name} !`, ts:Date.now()}]};
+    u.conversations.push(conv);
+    persistAndSave();
+  }
+  S.activeConvId = conv.id;
+  goTo('chat');
+}
+
+function renderChat(){
+  const el = document.getElementById('view-chat');
+  const u = user();
+  const conv = u.conversations.find(c=>c.id===S.activeConvId);
+  if(!conv){ goTo('messages'); return; }
+  conv.unread = 0;
+  el.innerHTML = `
+    <div class="topbar">
+      <button class="icon-btn" id="chat-back">${ic('chevLeft',18)}</button>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="cv-avatar" style="width:36px;height:36px;border-radius:12px;background:${conv.color};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;">${initials(conv.withName)}</div>
+        <div class="brand" style="font-size:15px;">${conv.withName}</div>
+      </div>
+    </div>
+    <div class="chat-scroll" id="chat-scroll"></div>
+    <div class="chat-inputbar">
+      <input id="chat-input" placeholder="Écrire un message...">
+      <button class="send-btn" id="chat-send">${ic('send',18)}</button>
+    </div>`;
+  document.getElementById('chat-back').addEventListener('click', ()=>goTo('messages'));
+  function renderMsgs(){
+    const scroll = document.getElementById('chat-scroll');
+    scroll.innerHTML = conv.messages.map(m=>`<div class="msg-bubble ${m.mine?'mine':'theirs'}">${escapeHtml(m.text)}</div>`).join('');
+    scroll.scrollTop = scroll.scrollHeight;
+  }
+  renderMsgs();
+  const SHOP_REPLIES = ["Merci pour ton attente, c'est bien noté 👍","Oui bien sûr, c'est disponible 👍","Bonne question, laisse-moi vérifier avec l'équipe.","Nous livrons partout à Abidjan sous 24-48h."];
+  document.getElementById('chat-send').addEventListener('click', sendChat);
+  document.getElementById('chat-input').addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendChat(); });
+  function sendChat(){
+    const input = document.getElementById('chat-input');
+    const val = input.value.trim(); if(!val) return;
+    conv.messages.push({id:uid('m'), mine:true, text:val, ts:Date.now()});
+    conv.lastTs = Date.now();
+    input.value='';
+    persistAndSave(); renderMsgs();
+    // 1) Réponse immédiate de l'assistant IA de la boutique, avec les liens utiles déjà en place.
+    setTimeout(()=>{
+      const slug = conv.withName.replace(/[^a-zA-Z0-9]/g,'').toLowerCase();
+      const aiText = `🤖 Assistant ${conv.withName} — Merci pour ton message ! Un vendeur va te répondre très vite. En attendant :
+• WhatsApp : wa.me/2250700000000
+• Telegram : t.me/${slug}
+• Paiement sécurisé : koraa.app/pay/${slug}`;
+      conv.messages.push({id:uid('m'), mine:false, text:aiText, ts:Date.now(), fromAI:true});
+      conv.lastTs = Date.now();
+      persistAndSave(); renderMsgs();
+      // Alerte envoyée vers Orbit Back Office : un client attend une vraie réponse du vendeur.
+      notifyOrbitPendingMessage(conv, val);
+      toast('Le vendeur a été alerté sur Orbit','check');
+    }, 700+Math.random()*500);
+    // 2) Un peu plus tard, simulate une vraie réponse humaine du vendeur (une fois alerté).
+    setTimeout(()=>{
+      conv.messages.push({id:uid('m'), mine:false, text:SHOP_REPLIES[Math.floor(Math.random()*SHOP_REPLIES.length)], ts:Date.now()});
+      conv.lastTs = Date.now();
+      persistAndSave();
+      if(S.view==='chat' && S.activeConvId===conv.id) renderMsgs();
+    }, 6000+Math.random()*4000);
+  }
+}
+/* Alerte "message client en attente" transmise au Back Office ORBIT via le pont de synchronisation. */
+function notifyOrbitPendingMessage(conv, lastMsgText){
+  if(!Array.isArray(DB.pendingSellerAlerts)) DB.pendingSellerAlerts = [];
+  DB.pendingSellerAlerts.unshift({
+    id:uid('alert'), shopId:conv.withId, shopName:conv.withName,
+    buyerId:user().id, buyerName:user().name, message:lastMsgText, ts:Date.now(), resolved:false,
+  });
+  persistAndSave();
+}
+
+/* =====================================================================
+   VUE : CREER / ESPACE CREATEUR
+   ===================================================================== */
+const WIZARD_STEPS = [
+  {title:"Acheter un produit", sub:"Choisis un produit dans une boutique Premium"},
+  {title:"Recevoir le produit", sub:"Ta commande est livrée chez toi"},
+  {title:"Réaliser une vidéo authentique", sub:"Filme ton avis sincère avec ton smartphone"},
+  {title:"Publier la vidéo", sub:"Ajoute une description et des hashtags"},
+  {title:"Associer la vidéo au produit", sub:"Le lien d'achat apparaît automatiquement"},
+  {title:"Partager ton lien", sub:"Chaque vente te rapporte une commission"},
+];
+function recalcLevel(u){
+  const f = u.stats.followers;
+  u.level = f>30000?'Icône':f>15000?'Étoile':f>5000?'Influenceur':f>800?'Ambassadeur':'Débutant';
+  u.levelProgress = Math.min(100, Math.round((f%5000)/50));
+}
+
+/* ---------------------------------------------------------------------
+   CRÉATEURS / FEED RÉELS (backend KORAA)
+   ----------------------------------------------------------------------
+   Le déblocage créateur (10 achats + 500 abonnés) et les promotions
+   publiées sont désormais réels. Ces helpers chargent les profils publics
+   de créateurs, la progression réelle de l'utilisateur, et le fil de
+   promotions (`GET /posts/feed`) — remplaçant les créateurs/posts simulés
+   (`SEED_CREATORS`/`buildPosts`, tous deux vides depuis le nettoyage des
+   fausses données).
+--------------------------------------------------------------------- */
+function ensureCreatorLocal(pub){
+  let c = DB.creators.find(x=>x.apiId===pub.id);
+  if(!c){
+    c = { id:'api_creator_'+pub.id, apiId: pub.id, name: pub.name, handle:'@'+pub.name.toLowerCase().replace(/[^a-z0-9]/g,''),
+      color: gradFor(pub.name), videos:0, sales:0, revenue:0 };
+    DB.creators.push(c);
+  }
+  c.name = pub.name;
+  c.followers = pub.followers_count;
+  c.level = pub.followers_count>30000?'Icône':pub.followers_count>15000?'Étoile':pub.followers_count>5000?'Influenceur':pub.followers_count>800?'Ambassadeur':'Débutant';
+  return c;
+}
+
+async function loadCreatorProgress(){
+  const u = user();
+  if(!u) return null;
+  try{
+    const progress = await API.creatorProgress();
+    progress.partner_shops = (progress.partner_shops||[]).map(s=>{
+      const local = DB.shops.find(x=>x.apiId===s.id);
+      return local || mapApiShop(s);
+    });
+    u.creatorProgress = progress;
+    persistAndSave();
+    return progress;
+  }catch(e){ return null; }
+}
+
+async function loadFeedFromApi(){
+  try{
+    const posts = await API.feed();
+    const creatorCache = {};
+    const mapped = [];
+    for(const post of posts){
+      let pub = creatorCache[post.creator_id];
+      if(!pub){
+        try{ pub = await API.publicUser(post.creator_id); creatorCache[post.creator_id] = pub; }catch(e){ continue; }
+      }
+      const creatorLocal = ensureCreatorLocal(pub);
+      const shop = DB.shops.find(s=>s.apiId===post.shop_id);
+      const product = shop && post.product_id ? shop.products.find(p=>p.apiId===post.product_id) : null;
+      mapped.push({
+        id:'api_post_'+post.id, apiId: post.id,
+        shopId: shop ? shop.id : null, shopApiId: post.shop_id,
+        productName: product ? product.name : (shop ? shop.name : 'Produit'),
+        productPrice: product ? product.price : 0, productOld: null, productApiId: product ? product.apiId : null,
+        creatorId: creatorLocal.id, creatorApiId: pub.id, creatorName: pub.name, creatorLevel: creatorLocal.level,
+        desc: post.caption || '', hashtags: [], music: (shop?shop.name:'KORAA')+' • Son original',
+        grad: gradFor((product?product.name:pub.name)+post.id),
+        likes: post.likes_count||0, comments: [], shares:0, gifts:0, liked:false, saved:false,
+        createdAt: post.created_at,
+      });
+    }
+    DB.posts = mapped;
+    persistAndSave();
+    if(S.view==='feed' && RENDERERS.feed) RENDERERS.feed();
+  }catch(e){
+    console.error('KORAA : chargement du fil créateurs impossible.', e);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   PROGRAMME DE FIDÉLITÉ & SPONSORING — RÈGLES DE LANCEMENT
+   1) Acheteurs : tous les 10 achats confirmés → un bon de réduction (-10%).
+   2) Créateurs : dès 100 abonnés → un retour (commission bonus) sur
+      chaque vente déclenchée par leurs publications, en plus de la
+      commission de base. Ces règles alimentent aussi le pont ORBIT.
+--------------------------------------------------------------------- */
+const LOYALTY_ORDERS_STEP = 10;
+const LOYALTY_VOUCHER_PCT = 10; // % de réduction du bon
+const CREATOR_FOLLOWER_BONUS_THRESHOLD = 100;
+const CREATOR_BASE_COMMISSION_RATE = 0.08;
+const CREATOR_BONUS_RETURN_RATE = 0.03; // retour additionnel une fois le seuil d'abonnés atteint
+
+function checkLoyaltyMilestones(u){
+  if(!Array.isArray(u.vouchers)) u.vouchers=[];
+  if(u.stats.orders>0 && u.stats.orders % LOYALTY_ORDERS_STEP === 0){
+    const voucher = { id:uid('vch'), code:`KORAA${LOYALTY_VOUCHER_PCT}-${Math.floor(1000+Math.random()*8999)}`, pct:LOYALTY_VOUCHER_PCT, earnedAt:Date.now(), earnedAtOrder:u.stats.orders, used:false };
+    u.vouchers.unshift(voucher);
+    u.history.unshift({label:`Bon de réduction gagné (-${LOYALTY_VOUCHER_PCT}%) — ${u.stats.orders} achats atteints`, tag:'Fidélité', ts:Date.now()});
+    addNotification('gift', `🎁 Félicitations ! ${u.stats.orders} achats = un bon de réduction de ${LOYALTY_VOUCHER_PCT}% (code ${voucher.code})`);
+    toast(`🎁 Bon de réduction -${LOYALTY_VOUCHER_PCT}% débloqué !`,'check');
+  }
+}
+/* Taux de commission d'un créateur pour une vente : base + retour bonus dès 100 abonnés. */
+function creatorCommissionRate(creatorFollowers){
+  return CREATOR_BASE_COMMISSION_RATE + (creatorFollowers>=CREATOR_FOLLOWER_BONUS_THRESHOLD ? CREATOR_BONUS_RETURN_RATE : 0);
+}
+/* Notifie et débloque le badge la première fois qu'un créateur franchit le seuil des 100 abonnés. */
+function checkCreatorFollowerBonus(u){
+  if(u.stats.followers>=CREATOR_FOLLOWER_BONUS_THRESHOLD && !u.badges.includes('Retours débloqués')){
+    u.badges.push('Retours débloqués');
+    addNotification('trophy', `🏆 100 abonnés atteints ! Tu reçois désormais un retour supplémentaire de ${Math.round(CREATOR_BONUS_RETURN_RATE*100)}% sur chaque vente déclenchée par tes publications.`);
+    toast('🏆 Retours sur ventes débloqués (100 abonnés) !','check');
+  }
+}
+
+/* ---------- Partenaires : boutiques qui ont "ouvert leurs portes" au créateur ----------
+   Une boutique devient partenaire d'un client dès qu'il y a déjà acheté (commande réelle),
+   ou dès qu'il l'ajoute manuellement (ex : produit reçu en cadeau, partenariat direct). */
+function partnerShopsOf(u){
+  const ids = new Set(u.partners||[]);
+  (DB.orders||[]).filter(o=>o.buyerId===u.id).forEach(o=> ids.add(o.shopId));
+  return [...ids].map(id=>shopOf(id)).filter(Boolean);
+}
+function addPartnerShop(shopId){
+  const u = user();
+  if(!Array.isArray(u.partners)) u.partners=[];
+  if(!u.partners.includes(shopId)){
+    u.partners.push(shopId);
+    u.history.unshift({label:`Nouveau partenaire ajouté : ${shopOf(shopId)?.name||''}`, tag:'Partenaire', ts:Date.now()});
+    persistAndSave();
+    toast('Boutique ajoutée à tes partenaires','check');
+  }
+}
+function openAddPartnerSheet(onDone){
+  const u = user();
+  const already = new Set(partnerShopsOf(u).map(s=>s.id));
+  const eligible = DB.shops.filter(s=>!already.has(s.id));
+  openSheet(`
+    <div class="sheet-head"><h4>Ajouter un partenaire</h4></div>
+    <div class="sheet-body">
+      <div style="font-size:12.5px;color:var(--grey-soft);margin-bottom:12px;">Choisis une boutique où tu as déjà acheté — c'est elle qui t'ouvre ses portes pour promouvoir ses produits.</div>
+      <div class="dash-list" style="padding:0;">
+        ${eligible.length ? eligible.map(s=>`
+          <div class="dash-row" data-addpartner="${s.id}" style="cursor:pointer;">
+            <div class="dr-icon" style="background:${s.color};color:#fff;">${initials(s.name)}</div>
+            <div class="dr-label">${s.name}<br><span style="font-size:11px;color:var(--grey-soft);">${s.cat}</span></div>
+            <div class="dr-val">${ic('plus',16)}</div>
+          </div>`).join('') : `<div class="empty-state">${ic('building',28)}<p>Aucune nouvelle boutique disponible.<br>Achète d'abord chez une boutique KORAA.</p></div>`}
+      </div>
+    </div>`);
+  document.querySelectorAll('[data-addpartner]').forEach(row=>row.addEventListener('click', ()=>{
+    addPartnerShop(row.dataset.addpartner);
+    closeModal();
+    if(typeof onDone==='function') onDone();
+  }));
+}
+
+function renderCreate(){
+  const el = document.getElementById('view-create');
+  const u = user();
+  el.innerHTML = `
+    <div class="topbar"><div class="brand"><span class="brand-dot"></span>${u.isCreator?'Espace Créateur':'Devenir Créateur'}</div>
+      <div class="tb-actions">${u.isCreator?`<button class="icon-btn" id="create-sponsor-btn">${ic('megaphone',17)}</button>`:''}</div>
+    </div>
+    <div class="view-scroll" id="create-body"></div>`;
+  if(u.isCreator) document.getElementById('create-sponsor-btn').addEventListener('click', ()=>goTo('sponsor', {sponsorMode:'creator'}));
+  const body = document.getElementById('create-body');
+  if(!u.isCreator){
+    body.innerHTML = `
+      <div class="creator-hero">
+        <h3>Transforme ta voix en revenu</h3>
+        <p>Achète, filme, publie : chaque vente générée par tes vidéos te rapporte une commission automatique.</p>
+        <button class="btn btn-gold" id="publish-first">Publier ma première vidéo</button>
+      </div>
+      <div class="section-row"><h3>Comment ça marche</h3></div>
+      <div class="wizard-steps">
+        ${WIZARD_STEPS.map((s,i)=>`<div class="wizard-step"><div class="ws-num">${i+1}</div><div><div class="ws-title">${s.title}</div><div class="ws-sub">${s.sub}</div></div></div>`).join('')}
+      </div>
+      <div style="padding:0 18px 24px;">
+        <button class="btn btn-outline btn-block" id="biz-space-btn">${ic('building',16)} Vous représentez une entreprise ?</button>
+      </div>`;
+    document.getElementById('publish-first').addEventListener('click', ()=>openCreateOptionsSheet());
+    document.getElementById('biz-space-btn').addEventListener('click', ()=>goTo('sponsor', {sponsorMode:'business'}));
+  } else {
+    const myPosts = DB.posts.filter(p=>p.creatorId===u.id);
+    body.innerHTML = `
+      <div class="creator-hero">
+        <h3>Niveau ${u.level}</h3>
+        <p>${u.levelProgress}% vers le niveau suivant · ${fmtCompact(u.stats.followers)} abonnés</p>
+        <button class="btn btn-gold" id="publish-new">${ic('camera',15)} Publier une nouvelle vidéo</button>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-tile"><div class="st-icon">${ic('wallet',17)}</div><div class="st-val">${fmtFCFA(u.stats.revenue)}</div><div class="st-label">Revenus générés</div></div>
+        <div class="stat-tile"><div class="st-icon">${ic('tag',17)}</div><div class="st-val">${fmtFCFA(u.stats.commissions)}</div><div class="st-label">Commissions</div></div>
+        <div class="stat-tile"><div class="st-icon">${ic('video',17)}</div><div class="st-val">${u.stats.videosPublished}</div><div class="st-label">Vidéos publiées</div></div>
+        <div class="stat-tile"><div class="st-icon">${ic('bag',17)}</div><div class="st-val">${u.stats.salesDone}</div><div class="st-label">Ventes réalisées</div></div>
+        <div class="stat-tile"><div class="st-icon">${ic('users',17)}</div><div class="st-val">${fmtCompact(u.stats.followers)}</div><div class="st-label">Followers</div></div>
+        <div class="stat-tile"><div class="st-icon">${ic('trophy',17)}</div><div class="st-val">#${u.stats.ranking}</div><div class="st-label">Classement</div></div>
+      </div>
+      <div class="section-row"><h3>Badges & récompenses</h3></div>
+      <div class="badge-row">
+        ${['Bienvenue','Créateur','100 vues','Première vente','Top Ambassadeur','Icône KORAA'].map(b=>`<div class="badge-chip ${u.badges.includes(b)?'':'locked'}"><div class="bc-icon">${ic('badge',24)}</div><div class="bc-label">${b}</div></div>`).join('')}
+      </div>
+      <div class="section-row"><h3>Affiliation</h3></div>
+      <div class="affiliate-box">
+        <div style="font-size:12.5px;color:var(--grey-soft);">Partage ton lien et ton code — chaque vente est automatiquement suivie.</div>
+        <div class="ab-row">${ic('link',15)} <b>koraa.app/u/${u.handle.replace('@','')}</b></div>
+        <div class="ab-row">${ic('tag',15)} Code de parrainage : <b>${u.referralCode}</b></div>
+        <div id="qr-canvas-wrap"></div>
+      </div>
+      <div class="section-row"><h3>${t('partners')} (${partnerShopsOf(u).length})</h3><button class="see-all" id="add-partner-btn" style="background:none;color:var(--gold-dark);font-weight:700;">+ Ajouter</button></div>
+      <div class="hscroll">
+        ${partnerShopsOf(u).length ? partnerShopsOf(u).map(s=>`
+          <div class="shop-card" data-openshop="${s.id}" style="width:130px;cursor:pointer;">
+            <div class="sc-cover" style="background:linear-gradient(135deg,${s.color},#1c1c1c);height:60px;"><div class="sc-logo" style="width:32px;height:32px;font-size:13px;">${initials(s.name)}</div></div>
+            <div class="sc-body" style="padding:20px 10px 12px;"><div class="sc-name" style="font-size:12.5px;">${s.name}</div><div class="sc-cat">${s.cat}</div></div>
+          </div>`).join('') : `<div class="empty-state" style="padding:24px 18px;">${ic('building',24)}<p>Aucun partenaire pour l'instant.<br>Achète chez une boutique pour l'ajouter.</p></div>`}
+      </div>
+      <div class="section-row"><h3>Mes vidéos (${myPosts.length})</h3></div>
+      <div class="dash-list" style="padding-top:0;">
+        ${myPosts.length? myPosts.map(p=>`
+          <div class="dash-row"><div class="dr-icon">${ic('video',16)}</div>
+            <div class="dr-label">${p.productName}<br><span style="font-size:11px;color:var(--grey-soft);">${fmtCompact(p.likes)} likes · ${p.comments.length} commentaires</span></div>
+            <div class="dr-val">${fmtCompact(p.shares)} partages</div>
+          </div>`).join('') : `<div class="empty-state">${ic('video',28)}<p>Aucune vidéo publiée pour l'instant.</p></div>`}
+      </div>`;
+    document.getElementById('publish-new').addEventListener('click', ()=>openCreateOptionsSheet());
+    document.getElementById('add-partner-btn').addEventListener('click', ()=> openAddPartnerSheet(renderCreate));
+    body.querySelectorAll('[data-openshop]').forEach(cardEl=>cardEl.addEventListener('click',()=>{ S.activeShopId=cardEl.dataset.openshop; goTo('shop'); }));
+    renderReferralQR(u);
+  }
+}
+function renderReferralQR(u){
+  const wrap = document.getElementById('qr-canvas-wrap');
+  if(!wrap) return;
+  wrap.innerHTML='';
+  const link = `https://koraa.app/u/${u.handle.replace('@','')}?ref=${u.referralCode}`;
+  if(window.QRCode){
+    try{ new QRCode(wrap, {text:link, width:132, height:132, colorDark:'#1c1c1c', colorLight:'#ffffff'}); return; }catch(e){}
+  }
+  wrap.innerHTML = `<div style="width:132px;height:132px;border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--grey-soft);font-size:11px;text-align:center;padding:10px;">${ic('qr',26)}<br>QR indisponible hors-ligne</div>`;
+}
+
+/* ---------- Sheet : Choix du mode de création (Live / Caméra / Galerie) ---------- */
+function openCreateOptionsSheet(){
+  openSheet(`
+    <div class="sheet-head"><h4>Publier</h4></div>
+    <div class="sheet-body">
+      <div class="create-opt-grid">
+        <button class="create-opt" data-createopt="live">
+          <span class="co-icon" style="background:linear-gradient(145deg,var(--danger),#7c261c);">${ic('video',22)}</span>
+          <span class="co-text"><b>Lancer un live</b><span>Diffuse en direct auprès de tes abonnés</span></span>
+          <span class="co-chev">${ic('chevRight',16)}</span>
+        </button>
+        <button class="create-opt" data-createopt="camera">
+          <span class="co-icon" style="background:linear-gradient(145deg,var(--gold),var(--gold-dark));">${ic('camera',22)}</span>
+          <span class="co-text"><b>Filmer une vidéo</b><span>Ouvre la caméra pour créer un nouveau contenu</span></span>
+          <span class="co-chev">${ic('chevRight',16)}</span>
+        </button>
+        <button class="create-opt" data-createopt="gallery">
+          <span class="co-icon" style="background:linear-gradient(145deg,#4a4038,#1c1c1c);">${ic('bag',22)}</span>
+          <span class="co-text"><b>Depuis ma galerie</b><span>Choisis une vidéo déjà filmée et publie-la</span></span>
+          <span class="co-chev">${ic('chevRight',16)}</span>
+        </button>
+      </div>
+    </div>`);
+  document.querySelectorAll('[data-createopt]').forEach(btn=>btn.addEventListener('click', ()=>{
+    const mode = btn.dataset.createopt;
+    closeModal();
+    if(mode==='live') openGoLiveSheet();
+    else if(mode==='camera') openCameraCaptureSheet();
+    else if(mode==='gallery') openGalleryPickSheet();
+    else openPublishSheet(mode);
+  }));
+}
+/* ---------- Camera / MediaRecorder helpers (fonctionnalités réelles du navigateur) ---------- */
+function stopMediaStream(stream){ if(stream) stream.getTracks().forEach(tr=>tr.stop()); }
+/* ---------- Sheet : Filmer une vidéo (vraie caméra + enregistrement) ---------- */
+async function openCameraCaptureSheet(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    toast("Caméra indisponible sur cet appareil/navigateur","alert");
+    openPublishSheet('camera');
+    return;
+  }
+  openSheet(`
+    <div class="sheet-head"><h4>Filmer une vidéo</h4></div>
+    <div class="sheet-body" style="padding-top:0;">
+      <div style="position:relative;border-radius:16px;overflow:hidden;background:#000;aspect-ratio:9/16;max-height:52vh;margin:0 auto;">
+        <video id="cam-preview" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+        <div id="cam-rec-badge" style="display:none;position:absolute;top:12px;left:12px;background:rgba(0,0,0,.55);color:#fff;padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:700;align-items:center;gap:6px;"><span class="live-badge-dot"></span> REC <span id="cam-timer">0:00</span></div>
+        <div id="cam-error" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#fff;font-size:12.5px;text-align:center;padding:20px;background:#1c1c1c;"></div>
+      </div>
+    </div>
+    <div class="sheet-foot" style="display:flex;gap:10px;">
+      <button class="btn btn-outline" id="cam-cancel" style="flex:1;">Annuler</button>
+      <button class="btn btn-gold" id="cam-record" style="flex:2;">${ic('camera',15)} Démarrer l'enregistrement</button>
+    </div>`, {maxHeight:'92%'});
+  let stream=null, recorder=null, chunks=[], timerInt=null, secs=0, recording=false;
+  const videoEl = document.getElementById('cam-preview');
+  const recBtn = document.getElementById('cam-record');
+  const cancelBtn = document.getElementById('cam-cancel');
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}, audio:true});
+    videoEl.srcObject = stream;
+  }catch(e){
+    document.getElementById('cam-error').style.display='flex';
+    document.getElementById('cam-error').textContent = "Impossible d'accéder à la caméra (permission refusée ou appareil indisponible).";
+  }
+  function cleanupAndClose(){ stopMediaStream(stream); if(timerInt) clearInterval(timerInt); closeModal(); }
+  cancelBtn.addEventListener('click', cleanupAndClose);
+  recBtn.addEventListener('click', ()=>{
+    if(!stream) return;
+    if(!recording){
+      chunks=[]; secs=0;
+      try{ recorder = new MediaRecorder(stream); }catch(e){ toast('Enregistrement non supporté sur ce navigateur'); return; }
+      recorder.ondataavailable = (e)=>{ if(e.data.size>0) chunks.push(e.data); };
+      recorder.onstop = ()=>{
+        const blob = new Blob(chunks, {type:'video/webm'});
+        const url = URL.createObjectURL(blob);
+        stopMediaStream(stream); clearInterval(timerInt); closeModal();
+        openPublishSheet('camera', url);
+      };
+      recorder.start();
+      recording = true;
+      document.getElementById('cam-rec-badge').style.display='flex';
+      recBtn.innerHTML = ic('check',15)+' Arrêter et continuer';
+      recBtn.classList.remove('btn-gold'); recBtn.classList.add('btn-outline');
+      timerInt = setInterval(()=>{ secs++; const m=Math.floor(secs/60), s=secs%60; document.getElementById('cam-timer').textContent = `${m}:${s<10?'0':''}${s}`; if(secs>=60) recorder.stop(); }, 1000);
+    } else {
+      recorder.stop();
+      recording = false;
+    }
+  });
+}
+/* ---------- Sheet : Depuis ma galerie (vrai sélecteur de fichier) ---------- */
+function openGalleryPickSheet(){
+  const input = document.createElement('input');
+  input.type='file'; input.accept='video/*'; input.style.display='none';
+  document.body.appendChild(input);
+  input.addEventListener('change', ()=>{
+    const file = input.files && input.files[0];
+    document.body.removeChild(input);
+    if(!file){ return; }
+    const url = URL.createObjectURL(file);
+    openPublishSheet('gallery', url);
+  });
+  input.click();
+}
+/* ---------- Sheet : Lancer un live (vraie caméra en direct + chat simulé) ---------- */
+function openGoLiveSheet(){
+  const u = user();
+  openSheet(`
+    <div class="sheet-head"><h4>Live</h4></div>
+    <div class="sheet-body" style="padding-top:0;">
+      <div style="position:relative;border-radius:16px;overflow:hidden;background:#000;aspect-ratio:9/16;max-height:52vh;margin:0 auto;">
+        <video id="live-preview" autoplay muted playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+        <div id="live-badge" style="display:none;position:absolute;top:12px;left:12px;background:var(--danger);color:#fff;padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:700;align-items:center;gap:6px;"><span class="live-badge-dot"></span> EN DIRECT</div>
+        <div id="live-viewers" style="display:none;position:absolute;top:12px;right:12px;background:rgba(0,0,0,.55);color:#fff;padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:700;">${ic('users',12)} 0</div>
+        <div id="live-error" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#fff;font-size:12.5px;text-align:center;padding:20px;background:#1c1c1c;"></div>
+        <div id="live-chat" style="position:absolute;left:10px;right:10px;bottom:10px;max-height:38%;overflow:hidden;display:flex;flex-direction:column;gap:4px;"></div>
+      </div>
+      <p style="font-size:12.5px;color:var(--grey-soft);text-align:center;margin-top:12px;">Tes abonnés seront notifiés instantanément et pourront acheter en direct pendant la diffusion.</p>
+    </div>
+    <div class="sheet-foot"><button class="btn btn-gold btn-block" id="golive-confirm"><span class="live-badge-dot" style="margin-right:6px;"></span>Démarrer le live</button></div>`, {maxHeight:'92%'});
+  let stream=null, liveInt=null, viewers=0;
+  const videoEl = document.getElementById('live-preview');
+  if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia){
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}, audio:true}).then(s=>{ stream=s; videoEl.srcObject=s; }).catch(()=>{
+      document.getElementById('live-error').style.display='flex';
+      document.getElementById('live-error').textContent = "Caméra indisponible — le live continuera sans aperçu vidéo.";
+    });
+  }
+  const LIVE_CHAT_LINES = ['🔥🔥🔥','Trop bien !','Le lien du produit svp ?','J\'achète direct 😍','On te suit depuis Abidjan !'];
+  document.getElementById('golive-confirm').addEventListener('click', (e)=>{
+    document.getElementById('live-badge').style.display='flex';
+    document.getElementById('live-viewers').style.display='block';
+    e.target.closest('.sheet-foot').innerHTML = `<button class="btn btn-outline btn-block" id="endlive-btn">Terminer le live</button>`;
+    toast('🔴 Live démarré ! Tes abonnés sont notifiés','check');
+    addNotification('video', `${u.name} a démarré un live — invite tes abonnés à te rejoindre !`);
+    const chatWrap = document.getElementById('live-chat');
+    liveInt = setInterval(()=>{
+      viewers += Math.floor(Math.random()*4);
+      const badge = document.getElementById('live-viewers'); if(badge) badge.innerHTML = `${ic('users',12)} ${viewers}`;
+      const c = DB.creators[Math.floor(Math.random()*DB.creators.length)];
+      const line = document.createElement('div');
+      line.style.cssText='background:rgba(0,0,0,.5);color:#fff;font-size:11.5px;padding:4px 9px;border-radius:10px;align-self:flex-start;max-width:80%;';
+      line.textContent = `${c?.name||'Spectateur'} : ${LIVE_CHAT_LINES[Math.floor(Math.random()*LIVE_CHAT_LINES.length)]}`;
+      chatWrap.appendChild(line);
+      while(chatWrap.children.length>4) chatWrap.removeChild(chatWrap.firstChild);
+    }, 2200);
+    document.getElementById('endlive-btn').addEventListener('click', ()=>{
+      clearInterval(liveInt); stopMediaStream(stream); closeModal();
+      u.stats.followers += Math.max(3, Math.round(viewers*0.15));
+      recalcLevel(u); persistAndSave();
+      toast(`Live terminé — ${viewers} spectateurs ont participé`,'check');
+    });
+  });
+}
+function openPublishSheet(sourceMode, videoBlobUrl){
+  const shopsList = DB.shops;
+  const u = user();
+  const partnerShops = partnerShopsOf(u); // boutiques où le client a déjà acheté / qu'il a ajoutées en partenaires
+  let selectedShop = partnerShops[0] || shopsList[0];
+  let selectedProduct = selectedShop.products[0];
+  const modeLabel = sourceMode==='live' ? 'Diffusion en direct' : sourceMode==='gallery' ? 'Depuis ta galerie' : sourceMode==='camera' ? 'Nouvelle prise de vue' : '';
+  openSheet(`
+    <div class="sheet-head"><h4>Publier une vidéo</h4>${modeLabel?`<span class="chip" style="margin-left:8px;">${modeLabel}</span>`:''}</div>
+    <div class="sheet-body">
+      ${videoBlobUrl?`<video src="${videoBlobUrl}" controls playsinline style="width:100%;max-height:220px;border-radius:12px;background:#000;margin-bottom:14px;"></video>`:''}
+      <div class="field"><label>${t('partners')} — boutiques où tu as déjà acheté</label>
+        <div class="chip-select" id="pub-partner-chips">
+          ${partnerShops.map((s,i)=>`<button type="button" class="chip-pick ${i===0?'picked':''}" data-partnershop="${s.id}">${s.name}</button>`).join('')}
+          <button type="button" class="chip-pick" id="pub-add-partner" style="border-style:dashed;">${ic('plus',13)} Ajouter</button>
+        </div>
+        ${partnerShops.length ? '' : `<div style="font-size:12px;color:var(--grey-soft);background:var(--beige-light);border-radius:12px;padding:10px 12px;margin-top:8px;">Achète chez une boutique pour pouvoir devenir son partenaire affilié et promouvoir ses produits.</div>`}
+      </div>
+      <div class="field"><label>Boutique</label>
+        <select id="pub-shop">${(partnerShops.length?partnerShops:shopsList).map(s=>`<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Produit associé</label>
+        <select id="pub-product">${selectedShop.products.map(p=>`<option value="${p.name}">${p.name} — ${fmtFCFA(p.price)}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Description de la vidéo</label>
+        <textarea id="pub-desc" rows="3" placeholder="Partage ton avis authentique sur ce produit...">Mon avis honnête après avoir testé ce produit — vous allez adorer !</textarea>
+      </div>
+      <div class="field"><label>Hashtags</label><input id="pub-hashtags" value="#KORAA #Avis"></div>
+    </div>
+    <div class="sheet-foot"><button class="btn btn-gold btn-block" id="pub-confirm">${ic('video',16)} Publier</button></div>`);
+  const chipsWrap = document.getElementById('pub-partner-chips');
+  if(chipsWrap){
+    chipsWrap.querySelectorAll('[data-partnershop]').forEach(chip=>chip.addEventListener('click', ()=>{
+      chipsWrap.querySelectorAll('[data-partnershop]').forEach(c=>c.classList.remove('picked'));
+      chip.classList.add('picked');
+      document.getElementById('pub-shop').value = chip.dataset.partnershop;
+      document.getElementById('pub-shop').dispatchEvent(new Event('change'));
+    }));
+  }
+  const addPartnerChip = document.getElementById('pub-add-partner');
+  if(addPartnerChip) addPartnerChip.addEventListener('click', ()=>{
+    closeModal();
+    openAddPartnerSheet(()=>openPublishSheet(sourceMode));
+  });
+  document.getElementById('pub-shop').addEventListener('change',(e)=>{
+    selectedShop = shopsList.find(s=>s.id===e.target.value);
+    document.getElementById('pub-product').innerHTML = selectedShop.products.map(p=>`<option value="${p.name}">${p.name} — ${fmtFCFA(p.price)}</option>`).join('');
+  });
+  document.getElementById('pub-confirm').addEventListener('click', ()=>{
+    const u = user();
+    const prodName = document.getElementById('pub-product').value;
+    const product = selectedShop.products.find(p=>p.name===prodName);
+    const desc = document.getElementById('pub-desc').value.trim() || 'Nouvelle vidéo KORAA';
+    const hashtags = document.getElementById('pub-hashtags').value.split(' ').filter(Boolean);
+    const wasCreator = u.isCreator;
+    u.isCreator = true;
+    if(!u.badges.includes('Créateur')) u.badges.push('Créateur');
+    u.stats.videosPublished++;
+    u.stats.followers += 15+Math.floor(Math.random()*40);
+    recalcLevel(u);
+    const post = {
+      id:uid('post'), shopId:selectedShop.id, productName:product.name, productPrice:product.price, productOld:product.oldPrice||null,
+      creatorId:u.id, creatorName:u.name, creatorLevel:u.level,
+      desc, hashtags, music:selectedShop.name+' • Son original', grad:gradFor(product.name+Date.now()),
+      videoBlobUrl: videoBlobUrl||null, sourceMode: sourceMode||'camera',
+      likes:0, comments:[], shares:0, gifts:0, liked:false, saved:false,
+    };
+    DB.posts.unshift(post);
+    persistAndSave();
+    closeModal();
+    toast(wasCreator?'Vidéo publiée !':'Bienvenue dans la communauté des créateurs 🎉','check');
+    goTo('create');
+    simulateVideoGrowth(post.id);
+  });
+}
+function simulateVideoGrowth(postId){
+  let ticks = 0;
+  const timer = setInterval(()=>{
+    const post = DB.posts.find(p=>p.id===postId);
+    if(!post || ticks>=6){ clearInterval(timer); return; }
+    ticks++;
+    post.likes += 5+Math.floor(Math.random()*30);
+    if(Math.random()<0.4){
+      const u = user();
+      const commission = Math.round(post.productPrice*creatorCommissionRate(u.stats.followers));
+      u.stats.revenue += commission; u.stats.commissions += commission; u.stats.salesDone++;
+      checkCreatorFollowerBonus(u);
+      addNotification('wallet', `Nouvelle vente via ta vidéo « ${post.productName} » — commission ${fmtFCFA(commission)}`);
+    }
+    persistAndSave();
+    if(S.view==='feed') renderFeed();
+    if(S.view==='create') renderCreate();
+  }, 4000);
+}
+
+/* =====================================================================
+   VUE : PROFIL
+   ===================================================================== */
+function renderProfile(){
+  const el = document.getElementById('view-profile');
+  const u = user();
+  const tabs = [ {id:'dashboard',label:'Tableau de bord'}, {id:'contenu',label:'Contenu'}, {id:'historique',label:'Historique'}, {id:'parametres',label:'Paramètres'} ];
+  el.innerHTML = `
+    <div class="topbar"><div class="brand"><span class="brand-dot"></span>Profil</div>
+      <div class="tb-actions">
+        <button class="icon-btn" id="prof-bell">${ic('bell',17)}${unreadNotifCount()>0?'<span class="badge-dot"></span>':''}</button>
+      </div>
+    </div>
+    <div class="view-scroll">
+      <div class="profile-hero">
+        <div class="level-ring" style="--lvl:${u.levelProgress};width:78px;height:78px;"><div class="lr-inner" style="width:100%;height:100%;background:${u.avatarColor};font-size:24px;">${initials(u.name)}</div></div>
+        <div class="ph-name">${escapeHtml(u.name)}</div>
+        <div class="ph-handle">${u.handle} · ${u.ville}</div>
+        <div class="ph-level">${ic('trophy',13)} Niveau ${u.level} · #${u.stats.ranking}</div>
+        <div class="profile-followrow">
+          <div class="pf-item" data-favtab="shops"><div class="pf-num">${u.stats.shopsFollowed}</div><div class="pf-label">Boutiques suivies</div></div>
+          <div class="pf-item" data-favtab="creators"><div class="pf-num">${u.following.creators.length}</div><div class="pf-label">Créateurs suivis</div></div>
+          <div class="pf-item" data-favtab="products"><div class="pf-num">${u.stats.favProducts}</div><div class="pf-label">Favoris</div></div>
+        </div>
+      </div>
+      <div class="profile-tabs">${tabs.map(t=>`<button class="profile-tab ${S.profileTab===t.id?'active':''}" data-proftab="${t.id}">${t.label}</button>`).join('')}</div>
+      <div id="profile-body"></div>
+    </div>`;
+  document.getElementById('prof-bell').addEventListener('click', ()=>goTo('notifications'));
+  el.querySelectorAll('[data-favtab]').forEach(x=>x.addEventListener('click', ()=>openFavoritesSheet(x.dataset.favtab)));
+  el.querySelectorAll('[data-proftab]').forEach(b=>b.addEventListener('click',()=>{ S.profileTab=b.dataset.proftab; renderProfile(); }));
+  renderProfileBody();
+}
+function renderProfileBody(){
+  const body = document.getElementById('profile-body');
+  const u = user();
+  if(S.profileTab==='dashboard'){
+    body.innerHTML = `
+      <div class="dash-list">
+        <div class="dash-row" id="dash-row-orders" style="cursor:pointer;"><div class="dr-icon">${ic('bag',17)}</div><div class="dr-label">Commandes passées ›</div><div class="dr-val">${u.stats.orders}</div></div>
+        <div class="dash-row"><div class="dr-icon">${ic('wallet',17)}</div><div class="dr-label">Montant total dépensé</div><div class="dr-val">${fmtFCFA(u.stats.spent)}</div></div>
+        <div class="dash-row"><div class="dr-icon">${ic('wallet',17)}</div><div class="dr-label">Revenus générés</div><div class="dr-val">${fmtFCFA(u.stats.revenue)}</div></div>
+        <div class="dash-row"><div class="dr-icon">${ic('tag',17)}</div><div class="dr-label">Commissions</div><div class="dr-val">${fmtFCFA(u.stats.commissions)}</div></div>
+        <div class="dash-row"><div class="dr-icon">${ic('video',17)}</div><div class="dr-label">Vidéos publiées</div><div class="dr-val">${u.stats.videosPublished}</div></div>
+        <div class="dash-row"><div class="dr-icon">${ic('bag',17)}</div><div class="dr-label">Ventes réalisées</div><div class="dr-val">${u.stats.salesDone}</div></div>
+        <div class="dash-row"><div class="dr-icon">${ic('users',17)}</div><div class="dr-label">Followers</div><div class="dr-val">${fmtCompact(u.stats.followers)}</div></div>
+        <div class="dash-row"><div class="dr-icon">${ic('gift',17)}</div><div class="dr-label">Cadeaux reçus</div><div class="dr-val">${u.stats.giftsReceived}</div></div>
+        <div class="dash-row"><div class="dr-icon">${ic('star',17)}</div><div class="dr-label">Points de récompense</div><div class="dr-val">${u.stats.rewardsPoints} pts</div></div>
+        <div class="dash-row"><div class="dr-icon">${ic('trophy',17)}</div><div class="dr-label">Classement</div><div class="dr-val">#${u.stats.ranking}</div></div>
+      </div>
+      <div class="section-row"><h3>Badges</h3></div>
+      <div class="badge-row">${u.badges.map(b=>`<div class="badge-chip"><div class="bc-icon">${ic('badge',22)}</div><div class="bc-label">${b}</div></div>`).join('')}</div>
+      <div class="section-row"><h3>Mes bons de réduction</h3><span class="see-all">${(u.vouchers||[]).filter(v=>!v.used).length} disponible${(u.vouchers||[]).filter(v=>!v.used).length>1?'s':''}</span></div>
+      ${(u.vouchers||[]).length ? `<div class="dash-list">${u.vouchers.map(v=>`
+        <div class="dash-row"><div class="dr-icon">${ic('tag',16)}</div>
+          <div class="dr-label"><b>${v.code}</b><br><span style="font-size:11px;color:var(--grey-soft);">-${v.pct}% · gagné après ${v.earnedAtOrder} achats</span></div>
+          <div class="dr-val">${v.used?'Utilisé':'Disponible'}</div>
+        </div>`).join('')}</div>` : `<div class="empty-state" style="padding:16px 18px;">${ic('tag',24)}<p>Encore ${LOYALTY_ORDERS_STEP-(u.stats.orders%LOYALTY_ORDERS_STEP)} achat${(LOYALTY_ORDERS_STEP-(u.stats.orders%LOYALTY_ORDERS_STEP))>1?'s':''} avant ton prochain bon de réduction.</p></div>`}`;
+    document.getElementById('dash-row-orders').addEventListener('click', openOrdersSheet);
+  } else if(S.profileTab==='contenu'){
+    const myPosts = DB.posts.filter(p=>p.creatorId===u.id);
+    body.innerHTML = myPosts.length ? `
+      <div class="section-row" style="padding-top:14px;"><h3>${myPosts.length} vidéo${myPosts.length>1?'s':''} publiée${myPosts.length>1?'s':''}</h3>
+        <button class="see-all" id="prof-content-create-btn" style="background:none;color:var(--gold-dark);font-weight:700;">${ic('plus',13)} Créer</button>
+      </div>
+      <div class="content-grid">${myPosts.map((p,i)=>`
+        <div class="content-tile" data-viewpost="${p.id}" style="background:${p.grad};animation-delay:${Math.min(i*0.03,.3)}s">
+          ${p.videoBlobUrl?`<video src="${p.videoBlobUrl}" muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover;"></video>`:''}
+          <span class="ct-play">${ic('play',15)}</span>
+          <div class="ct-overlay"></div>
+          <span class="ct-stats">${ic('heart',11)} ${fmtCompact(p.likes)}</span>
+        </div>`).join('')}</div>` :
+      `<div class="empty-state">${ic('video',28)}<p>Tu n'as encore publié aucune vidéo.<br>Appuie sur créer pour publier ton premier contenu.</p>
+        <button class="btn btn-gold" id="prof-content-create-btn" style="margin-top:14px;">${ic('plus',15)} Créer</button>
+      </div>`;
+    const createBtn = document.getElementById('prof-content-create-btn');
+    if(createBtn) createBtn.addEventListener('click', ()=>openCreateOptionsSheet());
+    body.querySelectorAll('[data-viewpost]').forEach(tile=>tile.addEventListener('click', ()=>{
+      S.feedTab='pourtoi'; goTo('feed');
+      setTimeout(()=>{ const card = document.querySelector(`.feed-card[data-postid="${tile.dataset.viewpost}"]`); if(card) card.scrollIntoView(); }, 60);
+    }));
+  } else if(S.profileTab==='historique'){
+    body.innerHTML = `<div class="dash-list" style="padding-top:14px;">
+      ${u.history.length? u.history.map(h=>`<div class="history-row"><span>${h.label}</span><span class="hr-tag">${h.tag}</span></div>`).join('') : `<div class="empty-state">${ic('bag',28)}<p>Aucun historique pour le moment.</p></div>`}
+    </div>`;
+  } else {
+    body.innerHTML = `
+      <div class="settings-row"><span>Langue</span>
+        <select id="settings-langue" style="border:1.5px solid var(--line);border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:700;background:var(--beige-light);">
+          ${LANG_OPTIONS.map(l=>`<option ${u.langue===l?'selected':''}>${l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="settings-row"><span>Email</span><b>${u.email||'—'}</b></div>
+      <div class="settings-row"><span>Téléphone</span><b>${u.phone||'—'}</b></div>
+      <div class="settings-row"><span>Ville</span><b>${u.ville}</b></div>
+      <div class="settings-row"><span>Consentement confidentialité</span><b>${ic('check',15)}</b></div>
+      <div class="settings-row" id="settings-reglement-row" style="cursor:pointer;"><span>${ic('badge',14)} Règlement intérieur</span><span>${ic('chevRight',15)}</span></div>
+      <div style="padding:20px 18px;">
+        <button class="btn btn-outline btn-block" id="logout-btn">${ic('logout',15)} Se déconnecter</button>
+      </div>`;
+    document.getElementById('settings-reglement-row').addEventListener('click', openReglementInterieurSheet);
+    document.getElementById('settings-langue').addEventListener('change', (e)=>{
+      u.langue = e.target.value;
+      persistAndSave();
+      renderBottomNav();
+      goTo(S.view);
+      toast('Langue mise à jour','check');
+    });
+    document.getElementById('logout-btn').addEventListener('click', ()=>{
+      DB.user = null; // le compte reste dans usersById/credentials : la reconnexion reste possible
+      clearToken();
+      persistAndSave();
+      goTo('feed'); // reset visuel avant bascule
+      document.getElementById('app-shell').classList.add('hidden');
+      document.getElementById('view-auth').classList.add('active');
+      S.authMode='login';
+      renderAuth();
+      toast('Déconnecté');
+    });
+  }
+}
+
+/* ---------- Sheet : Règlement intérieur (programme fidélité & sponsoring KORAA) ---------- */
+function openReglementInterieurSheet(){
+  openSheet(`
+    <div class="sheet-head"><h4>${ic('badge',16)} Règlement intérieur KORAA</h4></div>
+    <div class="sheet-body" style="font-size:13px;line-height:1.6;color:var(--ink);">
+      <p style="color:var(--grey-soft);font-size:12px;margin-bottom:16px;">Ce règlement s'applique à tous les comptes KORAA (acheteurs, créateurs, boutiques partenaires). Il peut évoluer ; la version en vigueur est toujours celle affichée ici.</p>
+
+      <h4 style="margin:14px 0 6px;">1. Programme de fidélité — Acheteurs</h4>
+      <ul style="padding-left:18px;margin:0 0 10px;">
+        <li>Tous les <b>${LOYALTY_ORDERS_STEP} achats confirmés</b>, un bon de réduction de <b>-${LOYALTY_VOUCHER_PCT}%</b> est automatiquement crédité sur le compte.</li>
+        <li>Le bon est valable sur la prochaine commande, dans n'importe quelle boutique partenaire KORAA.</li>
+        <li>Les commandes annulées ou remboursées ne comptent pas dans le total d'achats.</li>
+      </ul>
+
+      <h4 style="margin:14px 0 6px;">2. Programme créateurs — Commissions & retours</h4>
+      <ul style="padding-left:18px;margin:0 0 10px;">
+        <li>Commission de base : <b>${Math.round(CREATOR_BASE_COMMISSION_RATE*100)}%</b> sur chaque vente déclenchée par une vidéo publiée.</li>
+        <li>Dès <b>${CREATOR_FOLLOWER_BONUS_THRESHOLD} abonnés</b>, un retour additionnel de <b>+${Math.round(CREATOR_BONUS_RETURN_RATE*100)}%</b> s'applique automatiquement, sans démarche à effectuer.</li>
+        <li>Les commissions sont calculées à la confirmation de la commande et créditées au portefeuille du créateur.</li>
+      </ul>
+
+      <h4 style="margin:14px 0 6px;">3. Règles de conduite — Contenu créateur</h4>
+      <ul style="padding-left:18px;margin:0 0 10px;">
+        <li>Les vidéos doivent présenter un avis authentique sur un produit réellement reçu ou testé.</li>
+        <li>Toute publicité mensongère, contenu trompeur ou dénigrement d'une boutique concurrente est interdit.</li>
+        <li>Un créateur ne peut promouvoir que des boutiques partenaires (boutiques où un achat a été effectué ou un partenariat direct accordé).</li>
+      </ul>
+
+      <h4 style="margin:14px 0 6px;">4. Paiements &amp; livraisons</h4>
+      <ul style="padding-left:18px;margin:0 0 10px;">
+        <li>Moyens de paiement acceptés : Wave, Orange Money, MTN Money, espèces à la livraison.</li>
+        <li>Délai de livraison estimé : 24 à 48h selon la boutique et la zone.</li>
+        <li>Toute commande peut être suivie depuis l'onglet Profil &gt; Tableau de bord &gt; Commandes.</li>
+      </ul>
+
+      <h4 style="margin:14px 0 6px;">5. Données &amp; confidentialité</h4>
+      <ul style="padding-left:18px;margin:0 0 10px;">
+        <li>Les données de compte (nom, contact, historique d'achats) sont utilisées uniquement pour le fonctionnement de la plateforme et le support.</li>
+        <li>Aucune donnée n'est revendue à des tiers en dehors de l'écosystème Groupe (ORBIT).</li>
+      </ul>
+
+      <h4 style="margin:14px 0 6px;">6. Sanctions</h4>
+      <ul style="padding-left:18px;margin:0 0 10px;">
+        <li>Tout contenu ou comportement frauduleux (faux avis, fausses ventes, harcèlement) entraîne un avertissement puis, en cas de récidive, la suspension du compte.</li>
+      </ul>
+    </div>
+    <div class="sheet-foot"><button class="btn btn-gold btn-block" id="reglement-close">J'ai compris</button></div>`, {maxHeight:'88%'});
+  document.getElementById('reglement-close').addEventListener('click', closeModal);
+}
+
+/* ---------- Sheet : Favoris ---------- */
+function openFavoritesSheet(defaultTab){
+  const u = user();
+  let tab = defaultTab || 'products';
+  const tabs = [{id:'products',label:'Produits'},{id:'shops',label:'Boutiques'},{id:'videos',label:'Vidéos'},{id:'creators',label:'Créateurs'}];
+  openSheet(`
+    <div class="sheet-head"><h4>Mes favoris</h4></div>
+    <div class="discover-tabs" id="fav-tabs" style="padding:0 18px 12px;">${tabs.map(t=>`<button class="chip ${tab===t.id?'active':''}" data-favt="${t.id}">${t.label}</button>`).join('')}</div>
+    <div class="sheet-body" id="fav-body"></div>`, {maxHeight:'80%'});
+  function draw(){
+    document.querySelectorAll('#fav-tabs [data-favt]').forEach(b=>b.classList.toggle('active', b.dataset.favt===tab));
+    const body = document.getElementById('fav-body');
+    if(tab==='products'){
+      const items = u.favorites.products.map(key=>{ const [shopId,name]=key.split('::'); const s=shopOf(shopId); const p = s?.products.find(x=>x.name===name); return p?{...p,shopId,shopName:s.name,shopColor:s.color}:null; }).filter(Boolean);
+      body.innerHTML = items.length? `<div class="product-grid" style="padding:0;">${items.map(p=>productCardHTML(p)).join('')}</div>` : emptyFav();
+    } else if(tab==='shops'){
+      const items = u.favorites.shops.map(shopOf).filter(Boolean);
+      body.innerHTML = items.length? items.map(s=>shopGridCardHTML(s)).join('') : emptyFav();
+    } else if(tab==='videos'){
+      const items = DB.posts.filter(p=>u.favorites.videos.includes(p.id));
+      body.innerHTML = items.length? `<div class="dash-list" style="padding:0;">${items.map(p=>`<div class="dash-row"><div class="dr-icon">${ic('video',16)}</div><div class="dr-label">${p.productName}<br><span style="font-size:11px;color:var(--grey-soft);">${p.creatorName}</span></div></div>`).join('')}</div>` : emptyFav();
+    } else {
+      const items = u.favorites.creators.map(id=>DB.creators.find(c=>c.id===id)).filter(Boolean);
+      body.innerHTML = items.length? `<div class="dash-list" style="padding:0;">${items.map((c,i)=>creatorRowHTML(c,i)).join('')}</div>` : emptyFav();
+    }
+    body.querySelectorAll('[data-openshop]').forEach(cardEl=>cardEl.addEventListener('click',()=>{ closeModal(); S.activeShopId=cardEl.dataset.openshop; goTo('shop'); }));
+    body.querySelectorAll('[data-openprofile]').forEach(rowEl=>rowEl.addEventListener('click',()=>{ closeModal(); openCreatorProfileSheet(rowEl.dataset.openprofile); }));
+  }
+  function emptyFav(){ return `<div class="empty-state">${ic('heart',28)}<p>Rien ici pour l'instant.</p></div>`; }
+  draw();
+  document.querySelectorAll('#fav-tabs [data-favt]').forEach(b=>b.addEventListener('click',()=>{ tab=b.dataset.favt; draw(); }));
+}
+
+/* =====================================================================
+   VUE : NOTIFICATIONS
+   ===================================================================== */
+function renderNotifications(){
+  const el = document.getElementById('view-notifications');
+  const u = user();
+  el.innerHTML = `
+    <div class="topbar"><button class="icon-btn" id="ntf-back">${ic('chevLeft',18)}</button><div class="brand">Notifications</div></div>
+    <div class="view-scroll">
+      ${u.notifications.length? u.notifications.map(n=>`
+        <div class="notif-row ${n.read?'':'unread'}">
+          <div class="nr-icon">${ic(n.icon||'bell',17)}</div>
+          <div><div class="nr-text">${n.text}</div><div class="nr-time">${timeAgo(n.ts)}</div></div>
+        </div>`).join('') : `<div class="empty-state">${ic('bell',30)}<p>Aucune notification.</p></div>`}
+    </div>`;
+  document.getElementById('ntf-back').addEventListener('click', ()=>goTo(MAIN_VIEWS.includes(S.lastMain)?S.lastMain:'feed'));
+  u.notifications.forEach(n=>n.read=true);
+  persistAndSave();
+}
+
+/* =====================================================================
+   VUE : RECHERCHE
+   ===================================================================== */
+function renderSearch(){
+  const el = document.getElementById('view-search');
+  el.innerHTML = `
+    <div class="topbar"><button class="icon-btn" id="search-back">${ic('chevLeft',18)}</button>
+      <input id="search-input" placeholder="Rechercher..." value="${S.searchQuery}" style="flex:1;padding:11px 16px;border-radius:999px;background:var(--beige-light);border:1px solid var(--line);font-size:13.5px;">
+    </div>
+    <div class="view-scroll" id="search-results"></div>`;
+  document.getElementById('search-back').addEventListener('click', ()=>goTo(MAIN_VIEWS.includes(S.lastMain)?S.lastMain:'discover'));
+  const input = document.getElementById('search-input');
+  setTimeout(()=>input.focus(), 60);
+  input.addEventListener('input', ()=>{ S.searchQuery = input.value; drawResults(); });
+  function drawResults(){
+    const q = S.searchQuery.trim().toLowerCase();
+    const results = document.getElementById('search-results');
+    if(!q){ results.innerHTML = `<div class="empty-state">${ic('search',30)}<p>Recherche des boutiques, créateurs,<br>produits ou hashtags.</p></div>`; return; }
+    const shops = DB.shops.filter(s=>s.name.toLowerCase().includes(q)||s.cat.toLowerCase().includes(q));
+    const creators = DB.creators.filter(c=>c.name.toLowerCase().includes(q));
+    const products = allProducts().filter(p=>p.name.toLowerCase().includes(q));
+    let html='';
+    if(shops.length) html += `<div class="section-row"><h3>Boutiques</h3></div><div class="product-grid" style="grid-template-columns:1fr 1fr;">${shops.map(s=>shopGridCardHTML(s)).join('')}</div>`;
+    if(creators.length) html += `<div class="section-row"><h3>Créateurs</h3></div><div class="dash-list">${creators.map((c,i)=>creatorRowHTML(c,i)).join('')}</div>`;
+    if(products.length) html += `<div class="section-row"><h3>Produits</h3></div><div class="product-grid">${products.map(p=>productCardHTML(p)).join('')}</div>`;
+    if(!shops.length && !creators.length && !products.length) html = `<div class="empty-state">${ic('search',30)}<p>Aucun résultat pour « ${S.searchQuery} ».</p></div>`;
+    results.innerHTML = html;
+    results.querySelectorAll('[data-openshop]').forEach(cardEl=>cardEl.addEventListener('click',()=>{ S.activeShopId=cardEl.dataset.openshop; goTo('shop'); }));
+    results.querySelectorAll('[data-openprofile]').forEach(rowEl=>rowEl.addEventListener('click',()=>openCreatorProfileSheet(rowEl.dataset.openprofile)));
+  }
+  drawResults();
+}
+
+/* =====================================================================
+   VUE : SPONSORING
+   ===================================================================== */
+function renderSponsor(){
+  const el = document.getElementById('view-sponsor');
+  const u = user();
+  el.innerHTML = `
+    <div class="topbar"><button class="icon-btn" id="spon-back">${ic('chevLeft',18)}</button><div class="brand">Sponsoring</div></div>
+    <div class="sponsor-mode-toggle">
+      <button class="${S.sponsorMode==='creator'?'active':''}" data-sponsormode="creator">Espace créateur</button>
+      <button class="${S.sponsorMode==='business'?'active':''}" data-sponsormode="business">Espace entreprise</button>
+    </div>
+    <div class="view-scroll" id="sponsor-body"></div>`;
+  document.getElementById('spon-back').addEventListener('click', ()=>goTo(u.isCreator?'create':'discover'));
+  el.querySelectorAll('[data-sponsormode]').forEach(b=>b.addEventListener('click',()=>{ S.sponsorMode=b.dataset.sponsormode; renderSponsor(); }));
+  const body = document.getElementById('sponsor-body');
+  if(S.sponsorMode==='creator'){
+    const bonusActive = u.stats.followers>=CREATOR_FOLLOWER_BONUS_THRESHOLD;
+    body.innerHTML = `
+      <div class="creator-hero" style="margin-top:2px;">
+        <h3>${ic('gift',18)} Règles du programme de lancement</h3>
+        <p>Tous les ${LOYALTY_ORDERS_STEP} achats, un client reçoit un bon de réduction de ${LOYALTY_VOUCHER_PCT}%. Dès ${CREATOR_FOLLOWER_BONUS_THRESHOLD} abonnés, toi en tant que créateur tu reçois en plus un retour de ${Math.round(CREATOR_BONUS_RETURN_RATE*100)}% sur chaque vente déclenchée par tes vidéos (en plus de ta commission de base de ${Math.round(CREATOR_BASE_COMMISSION_RATE*100)}%).</p>
+        <div class="chip" style="margin-top:8px;${bonusActive?'':'opacity:.6;'}">${bonusActive?'✅ Retour bonus actif':`🔒 Encore ${CREATOR_FOLLOWER_BONUS_THRESHOLD-u.stats.followers} abonnés avant le retour bonus`}</div>
+      </div>
+      <div class="section-row"><h3>Campagnes ouvertes</h3><span class="see-all">${DB.sponsorCampaigns.filter(c=>c.status==='open').length} actives</span></div>
+      ${DB.sponsorCampaigns.map(c=>campaignCardHTML(c,'creator')).join('')}`;
+  } else {
+    body.innerHTML = `
+      <div class="creator-hero" style="margin-top:2px;">
+        <h3>${ic('building',18)} Recruter des créateurs</h3>
+        <p>Recherchez des créateurs par statistiques et lancez une campagne de collaboration.</p>
+      </div>
+      <div class="section-row"><h3>Meilleurs profils disponibles</h3></div>
+      <div class="dash-list">${DB.creators.slice(0,6).map((c,i)=>creatorRowHTML(c,i)).join('')}</div>
+      <div class="section-row"><h3>Vos campagnes</h3><button class="see-all" id="new-campaign-btn" style="background:none;color:var(--gold-dark);font-weight:700;">+ Nouvelle</button></div>
+      ${DB.sponsorCampaigns.map(c=>campaignCardHTML(c,'business')).join('')}`;
+    document.getElementById('new-campaign-btn').addEventListener('click', openNewCampaignSheet);
+  }
+  body.querySelectorAll('[data-apply]').forEach(btn=>btn.addEventListener('click', ()=>{
+    const camp = DB.sponsorCampaigns.find(c=>c.id===btn.dataset.apply);
+    camp.applied = Math.min(camp.slots, camp.applied+1);
+    persistAndSave();
+    toast('Candidature envoyée !','check');
+    addNotification('megaphone', `Candidature envoyée pour la campagne « ${camp.title} »`);
+    renderSponsor();
+  }));
+  body.querySelectorAll('[data-openprofile]').forEach(rowEl=>rowEl.addEventListener('click',()=>openCreatorProfileSheet(rowEl.dataset.openprofile)));
+}
+function campaignCardHTML(c, mode){
+  const s = shopOf(c.shopId);
+  return `
+  <div class="campaign-card">
+    <div class="cc-top"><span class="cc-title">${escapeHtml(c.title)}</span><span class="cc-status ${c.status==='open'?'open':'review'}">${c.status==='open'?'Ouverte':'En revue'}</span></div>
+    <div class="cc-desc">${escapeHtml(c.desc)}</div>
+    <div class="cc-meta">
+      <span>${s.name}</span><span>Budget ${fmtFCFA(c.budget)}</span><span>${c.applied}/${c.slots} places</span>
+    </div>
+    ${mode==='creator' && c.status==='open' ? `<button class="btn btn-gold btn-sm" style="margin-top:12px;" data-apply="${c.id}">Postuler</button>` : ''}
+  </div>`;
+}
+function openNewCampaignSheet(){
+  openSheet(`
+    <div class="sheet-head"><h4>Nouvelle campagne</h4></div>
+    <div class="sheet-body">
+      <div class="field"><label>Boutique</label><select id="nc-shop">${DB.shops.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div>
+      <div class="field"><label>Titre de la campagne</label><input id="nc-title" placeholder="Ex : Lancement collection"></div>
+      <div class="field"><label>Description</label><textarea id="nc-desc" rows="3" placeholder="Objectif, format attendu..."></textarea></div>
+      <div class="field-row">
+        <div class="field"><label>Budget (FCFA)</label><input id="nc-budget" type="number" value="100000"></div>
+        <div class="field"><label>Places créateurs</label><input id="nc-slots" type="number" value="5"></div>
+      </div>
+    </div>
+    <div class="sheet-foot"><button class="btn btn-gold btn-block" id="nc-confirm">Lancer la campagne</button></div>`);
+  document.getElementById('nc-confirm').addEventListener('click', ()=>{
+    const title = document.getElementById('nc-title').value.trim() || 'Nouvelle campagne';
+    DB.sponsorCampaigns.unshift({
+      id:uid('camp'), shopId:document.getElementById('nc-shop').value, title,
+      desc:document.getElementById('nc-desc').value.trim()||'—', status:'open',
+      budget:Number(document.getElementById('nc-budget').value)||0, slots:Number(document.getElementById('nc-slots').value)||1, applied:0,
+    });
+    persistAndSave(); closeModal(); toast('Campagne publiée','check'); renderSponsor();
+  });
+}
+
+/* =====================================================================
+   ENREGISTREMENT DES VUES + SIMULATION TEMPS REEL + BOOTSTRAP
+   ===================================================================== */
+Object.assign(RENDERERS, {
+  feed: renderFeed, discover: renderDiscover, shop: renderShop, create: renderCreate,
+  messages: renderMessages, chat: renderChat, profile: renderProfile,
+  notifications: renderNotifications, search: renderSearch, sponsor: renderSponsor,
+});
+
+const LIVE_EVENTS = [
+  {icon:'heart', text:()=>`${DB.creators[Math.floor(Math.random()*DB.creators.length)].name} a aimé une vidéo que tu suis`},
+  {icon:'users', text:()=>`Nouveau créateur tendance : ${DB.creators[Math.floor(Math.random()*DB.creators.length)].name}`},
+  {icon:'tag', text:()=>`Nouvelle promotion chez ${DB.shops[Math.floor(Math.random()*DB.shops.length)].name}`},
+];
+let liveTimer = null;
+function startLiveSimulation(){
+  if(liveTimer) return;
+  liveTimer = setInterval(()=>{
+    if(!DB.user) return;
+    if(document.hidden) return;
+    if(!DB.creators.length || !DB.shops.length) return; // pas d'événement simulé tant qu'il n'y a pas de vrais comptes/boutiques
+    const ev = LIVE_EVENTS[Math.floor(Math.random()*LIVE_EVENTS.length)];
+    addNotification(ev.icon, ev.text());
+    if(S.view==='feed' || S.view==='profile') { document.querySelectorAll('.icon-btn .badge-dot').length; }
+    // rafraîchit juste le badge de notif sans re-render complet intrusif
+    document.querySelectorAll('#feed-bell-btn, #prof-bell').forEach(btn=>{
+      if(!btn.querySelector('.badge-dot')) btn.insertAdjacentHTML('beforeend','<span class="badge-dot"></span>');
+    });
+  }, 18000);
+}
+
+/* ---------------------------------------------------------------------
+   BOOTSTRAP
+--------------------------------------------------------------------- */
+function initApp(){
+  loadDB();
+  renderBottomNav();
+  if(DB.user && getToken()){
+    // Une session locale existe : on vérifie qu'elle est toujours valide côté
+    // serveur (le token peut avoir expiré, ou la base avoir été réinitialisée)
+    // et on rafraîchit au passage les compteurs réels (achats, abonnés, statut créateur).
+    document.getElementById('view-auth').classList.remove('active');
+    document.getElementById('app-shell').classList.remove('hidden');
+    goTo('feed');
+    startLiveSimulation();
+    loadShopsFromApi();
+    API.me().then(serverUser=>hydrateSessionFromApi(serverUser)).catch(()=>{
+      DB.user = null; clearToken(); persistAndSave();
+      document.getElementById('app-shell').classList.add('hidden');
+      document.getElementById('view-auth').classList.add('active');
+      S.authMode='login';
+      renderAuth();
+      toast('Session expirée, reconnecte-toi.');
+    });
+  } else if(DB.user && !getToken()){
+    // Ancien compte local (créé avant le branchement API) sans session serveur valide.
+    DB.user = null;
+    renderAuth();
+  } else {
+    renderAuth();
+  }
+}
+document.addEventListener('DOMContentLoaded', initApp);
+
+// Synchronisation live entre onglets : si la base KORAA change dans un
+// autre onglet/fenêtre du même navigateur (reconnexion, achat, message...),
+// on recharge la donnée et on redessine la vue courante, sans recharger
+// la page — pour une union robuste et permanente entre les surfaces KORAA/ORBIT.
+window.addEventListener('storage', (e)=>{
+  if(e.key === DB_KEY){
+    try{
+      loadDB();
+      if(RENDERERS[S.view]) RENDERERS[S.view]();
+      if(MAIN_VIEWS.includes(S.view)) renderBottomNav();
+    }catch(err){ /* re-rendu impossible pour l'instant, on ignore silencieusement */ }
+  }
+});
+</script>
+</body>
+</html>
