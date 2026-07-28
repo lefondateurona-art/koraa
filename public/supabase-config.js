@@ -1,9 +1,14 @@
-/* Polaris — Supabase runtime config (shared project for the 3 apps).
-   Fill these 3 values from your Supabase project (Settings > API), then the
-   app connects automatically. Left empty = the prototype keeps running on its
-   built-in local data (no backend). This file is loaded by app.html BEFORE the
-   prototype script, so window.POLARIS_SUPABASE is available to the integration. */
+/* Polaris — configuration Supabase (projet unique partagé par les 3 apps). */
 window.POLARIS_SUPABASE = {
-  url: "",       // e.g. https://xxxxxxxx.supabase.co
-  anonKey: "",   // public anon key (safe for the browser)
+  url: "https://vlqnywwhdrfoyqutmkpa.supabase.co",
+  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZscW55d3doZHJmb3lxdXRta3BhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4MzkyMjcsImV4cCI6MjEwMDQxNTIyN30.nsVnUga2wq42-f6ipnmtUr0eiXfdP-QI_qMngHNfuvI",
+};
+window.POLARIS_FIREBASE = {
+  apiKey: "AIzaSyCynD02qHSqE-mLufB8fDHcDJQypaI1IVY",
+  authDomain: "polaris-hub-10762.firebaseapp.com",
+  projectId: "polaris-hub-10762",
+  storageBucket: "polaris-hub-10762.firebasestorage.app",
+  messagingSenderId: "952815835992",
+  appId: "1:952815835992:web:2d1fc640a89afaa815e32d",
+  measurementId: "G-QCCK23TX33",
 };
