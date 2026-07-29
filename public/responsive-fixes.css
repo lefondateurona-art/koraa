@@ -1,0 +1,24 @@
+/* =====================================================================
+   KORAA — Renforts responsive (ajout non intrusif, aucune règle existante
+   n'est modifiée ni retirée). Le design "cadre de téléphone" du prototype
+   est déjà responsive par construction (#phone-frame width:100% jusqu'à
+   460px) ; ces ajouts couvrent des cas limites non traités par le CSS
+   d'origine : médias, très petites hauteurs (mode paysage mobile), et le
+   fallback dvh pour les navigateurs mobiles avec barre d'adresse rétractable.
+   ===================================================================== */
+
+img, video, canvas, svg { max-width: 100%; height: auto; }
+
+/* Utilise la hauteur de fenêtre "dynamique" quand le navigateur la supporte,
+   pour éviter que la barre d'adresse mobile ne rogne le bas de l'app. */
+@supports (height: 100dvh) {
+  html, body, #koraa-root { height: 100dvh; }
+}
+
+/* Mode paysage sur petit écran (téléphone tourné) : le cadre décoratif
+   prenait toute la hauteur disponible même quand celle-ci est très faible,
+   ce qui écrasait le contenu. On le laisse respirer verticalement. */
+@media (max-height: 480px) and (orientation: landscape) {
+  #phone-frame { max-height: 100%; }
+  .feed-card { min-height: 320px; }
+}
